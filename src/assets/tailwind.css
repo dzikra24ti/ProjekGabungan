@@ -1,35 +1,18 @@
 @import "tailwindcss";
 
-@font-face {
-    font-family: "Barlow";
-    src: url("public/fonts/Barlow-Regular.ttf");
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&display=swap');
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  @apply text-[#2D1606] overflow-x-hidden;
 }
 
-@font-face {
-    font-family: "Poppins";
-    src: url("public/fonts/Poppins-Regular.ttf");
+/* Tambahkan di index.css */
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
 }
 
-@font-face {
-    font-family: "Poppins";
-    src: url("public/fonts/Poppins-ExtraBold.ttf");
-}
-
-@theme{
-    --font-barlow: "Barlow", sans-serif;
-    --font-poppins: "Poppins", sans-serif;
-    --font-poppins-extrabold: "Poppins-ExtraBold", sans-serif;
-
-    --color-latar: #f3f4f6;
-    --color-teks: #374151; 
-    --color-teks-samping: #6b7280;
-    --color-garis: #e5e7eb; 
-    --color-hijau: #00B074; 
-    --color-merah: #ef4444; 
-    --color-biru: #3b82f6;
-    --color-kuning: #f59e0b; 
-}
-
-body{
-    @apply font-barlow;
+.animate-loading-bar {
+  animation: loading-bar 2s infinite ease-in-out;
 }

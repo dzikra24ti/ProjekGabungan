@@ -1,47 +1,22 @@
-import { FaBell, FaSearch } from "react-icons/fa";
-import { FcAreaChart } from "react-icons/fc";
-import { SlSettings } from "react-icons/sl";
-
+import { AiFillBell } from "react-icons/ai"; 
 export default function Header() {
-    return (
-        <div id="header-container" className="flex justify-between items-center p-4">
-            {/* Search Bar */}
-            <div id="search-bar" className="relative w-full max-w-lg">
-                <input className="border border-gray-100 p-2 pr-10 bg-white w-full max-w-lg rounded-md outline-none"
-                    id="search-input"
-                    type="text"
-                    placeholder="Search Here..."
-                />
-                <FaSearch id="search-icon" className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-300"/>
-            </div>
-
-            {/* Icon & Profile Section */}
-            <div id="icons-container" className="flex items-center space-x-4">
-                {/* Icons */}
-                <div id="notification-icon" className="relative p-3 bg-blue-100 rounded-2xl text-blue-500 cursor-pointer">
-                    <FaBell />
-                    <span id="notification-badge" className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-blue-200 rounded-full px-2 py-1 text-xs">50</span>
-                </div>
-                <div id="chart-icon" className="p-3 bg-blue-100 rounded-2xl cursor-pointer">
-                    <FcAreaChart />
-                </div>
-                <div id="settings-icon" className="p-3 bg-red-100 rounded-2xl text-red-500 cursor-pointer">
-                    <SlSettings />
-                </div>
-             
-
-                {/* Profile Section */}
-                <div id="profile-container" className="flex items-center space-x-4 border-l pl-4 border-gray-300">
-                    <span id="profile-text">
-                        Hello, <b>Dzikra Rizqullah</b>
-                    </span>
-                    <img
-                        id="profile-avatar"
-                        src="public/img/img3.jpg"
-                        className="w-10 h-10 rounded-full"
-                    />
-                </div>
-            </div>
+  return (
+    <div className="p-6 flex justify-between items-center bg-transparent">
+      <div>
+        <h1 className="text-2xl font-extrabold text-[#2D1606]">Halo, Juragan! </h1>
+        <p className="text-sm text-gray-400 font-medium italic">Ayam gorengmu sudah wangi hari ini.</p>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        <div className="text-right hidden sm:block">
+          <p className="text-sm font-bold">Admin Jagoan</p>
+          <p className="text-[10px] text-yellow-600 font-bold">POS VERSION 1.2</p>
         </div>
-    );
-}
+        <div className="relative w-12 h-12 bg-white rounded-2xl shadow-sm border border-yellow-100 flex items-center justify-center cursor-pointer hover:bg-yellow-50 transition-colors">
+         <AiFillBell className="text-yellow-500 text-2xl" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+        </div>
+      </div>
+    </div>
+  );
+} 

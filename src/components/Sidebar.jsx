@@ -1,105 +1,70 @@
-import { AiOutlineUserAdd } from "react-icons/ai";
-import { AiOutlineUnorderedList } from "react-icons/ai";
-import { MdSpaceDashboard } from "react-icons/md";
-import { Link, NavLink } from "react-router-dom";
+import { FaSignOutAlt, FaHistory, FaWallet } from "react-icons/fa"; 
+import { AiFillHome, AiFillBook } from "react-icons/ai"; 
+// 1. Ganti Link menjadi NavLink
+import { NavLink } from "react-router-dom"; 
 
 export default function Sidebar() {
+  
+  // 2. Buat variabel menuClass untuk menangani logika status active
+  const menuClass = ({ isActive }) => 
+    `flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ease-in-out group ${
+      isActive 
+        ? "bg-[#F59E0B] text-white shadow-xl shadow-yellow-200" // Class saat aktif
+        : "text-gray-400 hover:bg-[#F59E0B] hover:text-white hover:shadow-xl hover:shadow-yellow-200" // Class saat biasa
+    }`;
 
-  const menuClass = ({ isActive }) =>
-    `flex cursor-pointer items-center rounded-xl p-4  space-x-2
-        ${
-          isActive
-            ? "text-hijau bg-green-200 font-extrabold"
-            : "text-gray-600 hover:text-hijau hover:bg-green-200 hover:font-extrabold"
-        }`;
-        
   return (
-    <div
-      id="sidebar"
-      className="flex min-h-screen w-90 flex-col bg-white p-10 shadow-lg"
-    >
-      {/* Logo */}
-      <div id="sidebar-logo" className="flex flex-col">
-        <span
-          id="logo-title"
-          className="font-poppins text-[48px] text-gray-900"
-        >
-          Tak
-        </span>
-        <span
-          id="logo-title"
-          className="font-poppins text-[48px] text-gray-900"
-        >
-          Sedap{" "}
-          <b id="logo-dot" className="text-hijau">
-            .
-          </b>
-        </span>
-        <span id="logo-subtitle" className="font-semibold text-gray-400">
-          Modern Admin Dashboard
-        </span>
+    <div className="fixed left-0 top-0 h-screen w-20 md:w-64 bg-white border-r border-yellow-100 flex flex-col p-6 z-[999]">
+      
+      {/* JUDUL SIDEBAR */}
+      <div className="hidden md:block mb-10">
+        <h2 className="text-[#F59E0B] font-black text-2xl tracking-tighter italic">JAGO AYAM.</h2>
+        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none">Manajemen Kasir</p>
       </div>
 
-      {/* List Menu */}
-      <div id="sidebar-menu" className="mt-10">
-        <ul id="menu-list" className="space-y-3">
-          <li>
-            <NavLink
-              id="menu-1"
-              to="/"
-              className={menuClass}>
-              <MdSpaceDashboard className="mr-4 text-xl" />
-              Dashboard
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              id="menu-2"
-              to="/orders"
-              className={menuClass}>
-              <AiOutlineUnorderedList className="mr-4 text-xl" />
-              Orders
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              id="menu-3"
-              to="/customers"
-              className={menuClass}>
-              <AiOutlineUserAdd className="mr-4 text-xl" />
-              Customers
-            </NavLink>
-          </li>
-        </ul>
+      {/* DAFTAR MENU */}
+      <div className="flex flex-col gap-3">
+        {/* Gunakan NavLink dan panggil variabel menuClass */}
+        <NavLink to="/dashboard" className={menuClass}>
+          <div className="w-6 text-center"><i><AiFillHome /></i></div>
+          <span className="hidden md:block font-bold text-sm">Dashboard</span>
+        </NavLink>
+
+        <NavLink to="/riwayat" className={menuClass}>
+          <div className="w-6 text-center"><i><FaHistory /></i></div>
+          <span className="hidden md:block font-bold text-sm">Riwayat</span>
+        </NavLink>
+
+        <NavLink to="/pengeluaran" className={menuClass}>
+          <div className="w-6 text-center"><i><FaWallet /></i></div>
+          <span className="hidden md:block font-bold text-sm">Pengeluaran</span>
+        </NavLink>
+
+        <NavLink to="/laporan" className={menuClass}>
+          <div className="w-6 text-center"><i><AiFillBook/></i></div>
+          <span className="hidden md:block font-bold text-sm">Laporan</span>
+        </NavLink>
       </div>
 
-      {/* Footer */}
-      <div id="sidebar-footer" className="mt-auto">
-        <div
-          id="footer-card"
-          className="bg-hijau px-4 py-2 rounded-md shadow-lg mb-10 flex items-center"
-        >
-          <div id="footer-text" className="text-white text-sm">
-            <span>Please organize your menus through button below!</span>
-            <div
-              id="add-menu-button"
-              className="flex justify-center items-center p-2 mt-3 bg-white rounded-md space-x-2"
-            >
-              <span className="text-gray-600 flex items-center">Add Menus</span>
-            </div>
-          </div>
-          <img
-            id="footer-avatar"
-            className="w-20 rounded-full"
-            src="public/img/img3.jpg"
+      <div className="mt-auto pt-6 border-t border-yellow-50 space-y-4">
+        <div className="hidden md:flex items-center gap-3 px-2">
+          <img 
+            src="/img/img3.jpg" 
+            alt="Profile" 
+            className="w-10 h-10 rounded-xl shadow-sm border border-yellow-100"
           />
+          <div className="overflow-hidden">
+            <p className="text-sm font-black text-gray-800 truncate">Admin Jagoan</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Owner</p>
+          </div>
         </div>
-        <span id="footer-brand" className="font-bold text-gray-400">
-          Sedap Restaurant Admin Dashboard
-        </span>
-        <p id="footer-copyright" className="font-light text-gray-400">
-          &copy; 2025 All Right Reserved
-        </p>
+
+        <button className="flex items-center gap-4 p-4 text-gray-400 hover:text-red-600 transition-all w-full text-left rounded-2xl hover:bg-red-50 group">
+          <div className="w-6 text-center">
+            <i><FaSignOutAlt /></i>
+          </div>
+          <span className="hidden md:block font-bold text-sm">Keluar</span>
+        </button>
       </div>
     </div>
   );
