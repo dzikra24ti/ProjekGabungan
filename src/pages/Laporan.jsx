@@ -1,40 +1,159 @@
-// Tambahkan titik dua (..) untuk "keluar" dari folder pages dulu baru masuk ke components
+import { useState } from "react";
+import { AiOutlineBarChart, AiOutlineArrowUp, AiOutlineInbox, AiOutlineDollar, AiOutlineShopping } from "react-icons/ai";
 import PageHeader from "../components/PageHeader";
 
-const Laporan = () => {
-  return (
-    <div className="animate-fade-in">
-      <div className="mb-8">
-        <h1 className="text-2xl font-black text-gray-800">Laporan Penjualan</h1>
-        <p className="text-gray-400 text-sm">Pantau performa tokomu di sini.</p>
-      </div>
+export default function Laporan() {
+    // 1. STATE UNTUK FILTER PERIODE WAKTU
+    const [periode, setPeriode] = useState("hari_ini");
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Card Statistik */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-yellow-50">
-          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Total Pesanan</p>
-          <h3 className="text-2xl font-black text-gray-800">1.284</h3>
-          <span className="text-green-500 text-xs font-bold">+12% dari bulan lalu</span>
+    // 2. DATA STATISTIK SIMULASI (Bisa dihubungkan ke database/state global nantinya)
+    const ringkasanData = {
+        hari_ini: { omzet: 92000, transaksi: 4, itemTerjual: 8, terlaris: "Bandrek Susu" },
+        bulan_ini: { omzet: 2450000, transaksi: 112, itemTerjual: 245, terlaris: "Teh Telor Bebek" }
+    };
+
+    // 3. DATA BREAKDOWN PENJUALAN PER ITEM
+    const dataMenuTerjual = [
+        { nama: "Teh Telor Bebek", porsi: 3, omzetSub: 42000, persentase: "45%" },
+        { nama: "Bandrek Susu Rempah", porsi: 3, omzetSub: 36000, persentase: "39%" },
+        { nama: "Indomie Rebus Telor", porsi: 1, omzetSub: 13000, persentase: "14%" },
+        { nama: "Kopi Kasar Tradisional", porsi: 1, omzetSub: 8000, persentase: "8%" },
+        { nama: "Roti Bakar Srikaya", porsi: 0, omzetSub: 0, persentase: "0%" },
+    ];
+
+    // Mengambil data aktif berdasarkan state periode yang dipilih pengguna
+    const trenAktif = ringkasanData[periode];
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-200 bg-stone-50 text-stone-800 font-sans">
+            
+            {/* Navigasi Header Halaman */}
+            <PageHeader 
+                icon={<AiOutlineBarChart />}
+                title="Laporan Bisnis Kedai" 
+                description="Pantau statistik omzet harian, jumlah produk terjual, serta tren menu paling diminati pelanggan." 
+            />
+
+            {/* BAR FILTER PERIODE */}
+            <div className="flex bg-white p-2 rounded-xl border border-stone-200/60 shadow-sm max-w-xs">
+                <button 
+                    onClick={() => setPeriode("hari_ini")}
+                    className={`flex-1 py-1.5 text-center text-xs font-black uppercase tracking-wider rounded-lg transition-all ${periode === "hari_ini" ? "bg-stone-800 text-stone-50 shadow-sm" : "text-stone-500 hover:text-stone-800"}`}
+                >
+                    Hari Ini
+                </button>
+                <button 
+                    onClick={() => setPeriode("bulan_ini")}
+                    className={`flex-1 py-1.5 text-center text-xs font-black uppercase tracking-wider rounded-lg transition-all ${periode === "bulan_ini" ? "bg-stone-800 text-stone-50 shadow-sm" : "text-stone-500 hover:text-stone-800"}`}
+                >
+                    Bulan Ini
+                </button>
+            </div>
+
+            {/* DASHBOARD CARDS (GRID METRIK UTAMA) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                {/* CARD 1: OMZET KOTOR */}
+                <div className="bg-white p-5 rounded-2xl border border-stone-200/60 shadow-sm flex items-center justify-between">
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Total Pendapatan</p>
+                        <h3 className="text-xl font-black text-stone-900 tracking-tight">
+                            Rp {trenAktif.omzet.toLocaleString("id-ID")}
+                        </h3>
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            <AiOutlineArrowUp /> +12.4%
+                        </span>
+                    </div>
+                    <div className="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400 text-lg border border-stone-100">
+                        <AiOutlineDollar />
+                    </div>
+                </div>
+
+                {/* CARD 2: JUMLAH NOTA / TRANSAKSI */}
+                <div className="bg-white p-5 rounded-2xl border border-stone-200/60 shadow-sm flex items-center justify-between">
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Nota Tersimpan</p>
+                        <h3 className="text-xl font-black text-stone-900 tracking-tight">{trenAktif.transaksi} Nota</h3>
+                        <p className="text-[10px] text-stone-400 font-medium">Transaksi sukses diselesaikan</p>
+                    </div>
+                    <div className="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400 text-lg border border-stone-100">
+                        <AiOutlineShopping />
+                    </div>
+                </div>
+
+                {/* CARD 3: TOTAL PRODUK KELUAR */}
+                <div className="bg-white p-5 rounded-2xl border border-stone-200/60 shadow-sm flex items-center justify-between">
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Porsi Terjual</p>
+                        <h3 className="text-xl font-black text-stone-900 tracking-tight">{trenAktif.itemTerjual} Porsi</h3>
+                        <p className="text-[10px] text-stone-400 font-medium">Makanan & minuman terbuat</p>
+                    </div>
+                    <div className="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400 text-lg border border-stone-100">
+                        <AiOutlineInbox />
+                    </div>
+                </div>
+
+                {/* CARD 4: JUARA PRODUK TERTINGGI */}
+                <div className="bg-white p-5 rounded-2xl border border-stone-200/60 shadow-sm flex items-center justify-between">
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Menu Terlaris</p>
+                        <h3 className="text-sm font-black text-stone-900 tracking-tight truncate max-w-[150px]">{trenAktif.terlaris}</h3>
+                        <span className="inline-flex items-center text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/40 px-2 py-0.5 rounded-full">
+                            ⭐ Pilihan Utama
+                        </span>
+                    </div>
+                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 text-base select-none">
+                        🔥
+                    </div>
+                </div>
+
+            </div>
+
+            {/* DETAIL DAFTAR MENU TERJUAL */}
+            <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+                <div className="p-5 border-b border-stone-100">
+                    <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest">
+                        Rincian Penjualan Per Menu
+                    </h3>
+                </div>
+                
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-stone-50/70 border-b border-stone-200/60 text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                                <th className="py-4 px-6">Nama Menu Kedai</th>
+                                <th className="py-4 px-6 text-center">Kuantitas Terjual</th>
+                                <th className="py-4 px-6 text-right">Subtotal Omzet</th>
+                                <th className="py-4 px-6 text-right">Kontribusi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100 text-xs font-bold text-stone-700">
+                            {dataMenuTerjual.map((item, index) => (
+                                <tr key={index} className="hover:bg-stone-50/40 transition-colors">
+                                    <td className="py-4 px-6 font-black text-stone-900">{item.nama}</td>
+                                    <td className="py-4 px-6 text-center text-stone-800 font-mono text-sm">{item.porsi}x</td>
+                                    <td className="py-4 px-6 text-right font-black text-stone-900">
+                                        Rp {item.omzetSub.toLocaleString("id-ID")}
+                                    </td>
+                                    <td className="py-4 px-6 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <span className="text-stone-400 font-medium">{item.persentase}</span>
+                                            {/* Bar Progres Kecil Miniatur Visual */}
+                                            <div className="w-16 bg-stone-100 h-1.5 rounded-full overflow-hidden hidden sm:block">
+                                                <div 
+                                                    className="bg-stone-700 h-full rounded-full" 
+                                                    style={{ width: item.persentase }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
-        
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-yellow-50">
-          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Menu Terlaris</p>
-          <h3 className="text-2xl font-black text-gray-800">Paha Atas</h3>
-          <span className="text-amber-500 text-xs font-bold">Terjual 450+ porsi</span>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-yellow-50">
-          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Kepuasan</p>
-          <h3 className="text-2xl font-black text-gray-800">4.8/5.0</h3>
-          <span className="text-blue-500 text-xs font-bold">Dari 200 ulasan</span>
-        </div>
-      </div>
-
-      <div className="mt-8 bg-white p-8 rounded-[40px] shadow-sm border border-yellow-50 min-h-[300px] flex items-center justify-center">
-        <p className="text-gray-300 italic font-medium">Grafik penjualan akan tampil di sini...</p>
-      </div>
-    </div>
-  );
-};
-
-export default Laporan;
+    );
+}

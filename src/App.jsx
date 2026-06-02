@@ -5,7 +5,7 @@
   const PageHeader = React.lazy(() => import("./components/PageHeader"))
   const Dashboard = React.lazy(() => import("./pages/Dashboard"))
   const Riwayat = React.lazy(() => import("./pages/Riwayat"))
-  const Pengeluaran = React.lazy(() => import("./pages/Pengeluaran"))
+  const Kasir = React.lazy(() => import("./pages/Kasir"))
   const Laporan = React.lazy(() => import("./pages/Laporan"))
   const NotFound = React.lazy(() => import("./pages/Notfound"))
   import MainLayout from "./layouts/MainLayout";
@@ -23,7 +23,7 @@
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/riwayat" element={<Riwayat />} />
-          <Route path="/pengeluaran" element={<Pengeluaran />} />
+          <Route path="/kasir" element={<Kasir />} />
           <Route path="/laporan" element={<Laporan />} />
         </Route>
 
