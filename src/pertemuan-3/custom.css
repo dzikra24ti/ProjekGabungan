@@ -1,0 +1,94 @@
+/* Import font bergaya sporty dan kuat */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    /* Gradient hijau rumput stadion yang elegan */
+    background: radial-gradient(circle at center, #1a3c1a 0%, #0a140a 100%);
+    background-attachment: fixed;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    /* Tekstur garis lapangan samar */
+    background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.02) 0px,
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 100px
+    );
+}
+
+/* Card dengan aksen "Jersey" dan nomor punggung */
+.card {
+    max-width: 550px;
+    margin: 40px auto;
+    background: #ffffff;
+    color: #1a1a1a;
+    padding: 40px;
+    border-radius: 4px; /* Sudut lebih tajam untuk kesan sporty */
+    box-shadow: 15px 15px 0px #ffd700; /* Shadow kuning emas khas piala */
+    border-left: 8px solid #0056b3; /* Warna utama klub (bisa diganti) */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Header bergaya papan skor / Headline koran olahraga */
+h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 3.5rem;
+    color: #0056b3;
+    text-align: center;
+    line-height: 0.9;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-style: italic;
+    border-bottom: 4px solid #1a1a1a;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Paragraf isi */
+p {
+    font-size: 16px;
+    line-height: 1.6;
+    border-left: 2px solid #ddd;
+    padding-left: 15px;
+    font-weight: 400;
+}
+
+/* Garis pemisah menyerupai garis tengah lapangan */
+hr {
+    border: none;
+    height: 3px;
+    background: repeating-linear-gradient(
+        90deg,
+        #0056b3,
+        #0056b3 10px,
+        #ffd700 10px,
+        #ffd700 20px
+    );
+    margin: 20px 0;
+}
+
+/* Greeting / Quote pemain */
+small {
+    display: block;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: right;
+    color: #0056b3;
+    letter-spacing: 1px;
+}
+
+/* Efek tambahan: Aksen nomor di pojok card */
+.card::after {
+    content: "10";
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    font-family: 'Bebas Neue';
+    font-size: 8rem;
+    color: rgba(0, 0, 0, 0.05);
+    z-index: 0;
+}
