@@ -1,3 +1,4 @@
+import { MdNoFood } from "react-icons/md"; 
 import { 
     AiOutlineDashboard, 
     AiOutlineCalculator, 
@@ -7,12 +8,13 @@ import {
 import { NavLink } from "react-router-dom";
 
 export default function Sidebar() {
-    const menuItems = [
-        { name: "Overview Dashboard", icon: <AiOutlineDashboard />, desc: "Ringkasan data hari ini", path: "/dashboard" },
-        { name: "Kasir Cepat (POS)", icon: <AiOutlineCalculator />, desc: "Solusi anti pesanan tertukar", path: "/kasir" },
-        { name: "Riwayat Transaksi", icon: <AiOutlineHistory />, desc: "Penyimpanan data otomatis", path: "/riwayat" },
-        { name: "Laporan Omzet", icon: <AiOutlineBarChart />, desc: "Analisis penjualan berkala", path: "/laporan" },
-    ];
+    // Logika penataan class dinamis dari modul (menggunakan warna tema stone Anda)
+    const menuClass = ({ isActive }) =>
+        `w-full flex items-start gap-3.5 px-3 py-3 rounded-xl transition-all text-left group ${
+            isActive 
+                ? "bg-stone-800 text-stone-50 shadow-sm" 
+                : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+        }`;
 
     return (
         <aside className="w-72 bg-white h-screen border-r border-stone-200/80 flex flex-col justify-between p-6 shrink-0">
@@ -29,27 +31,94 @@ export default function Sidebar() {
                 {/* NAVIGASI MENU UTAMA */}
                 <nav className="space-y-1.5">
                     <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest pl-3 mb-3">Menu Utama</p>
-                    {menuItems.map((item, index) => (
-                        <NavLink
-                            key={index}
-                            to={item.path}
-                            className={({ isActive }) => `w-full flex items-start gap-3.5 px-3 py-3 rounded-xl transition-all text-left group ${
-                                isActive ? "bg-stone-800 text-stone-50 shadow-sm" : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
-                            }`}
-                        >
-                            {({ isActive }) => (
-                                <>
-                                    <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
-                                        {item.icon}
-                                    </span>
-                                    <div>
-                                        <p className="text-xs font-black tracking-tight">{item.name}</p>
-                                        <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>{item.desc}</p>
-                                    </div>
-                                </>
-                            )}
-                        </NavLink>
-                    ))}
+                    
+                    {/* Daftar Menu List ditulis manual tanpa array map */}
+                    <ul className="space-y-1.5">
+                        {/* Menu 1: Overview Dashboard */}
+                        <li>
+                            <NavLink to="/dashboard" className={menuClass}>
+                                {({ isActive }) => (
+                                    <>
+                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                            <AiOutlineDashboard />
+                                        </span>
+                                        <div>
+                                            <p className="text-xs font-black tracking-tight">Overview Dashboard</p>
+                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Ringkasan data hari ini</p>
+                                        </div>
+                                    </>
+                                )}
+                            </NavLink>
+                        </li>
+
+                        {/* Menu 2: Products */}
+                        <li>
+                            <NavLink to="/products" className={menuClass}>
+                                {({ isActive }) => (
+                                    <>
+                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                            <MdNoFood />
+                                        </span>
+                                        <div>
+                                            <p className="text-xs font-black tracking-tight">Products</p>
+                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Menu Anti Lapar</p>
+                                        </div>
+                                    </>
+                                )}
+                            </NavLink>
+                        </li>
+
+                        {/* Menu 3: Kasir Cepat (POS) */}
+                        <li>
+                            <NavLink to="/kasir" className={menuClass}>
+                                {({ isActive }) => (
+                                    <>
+                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                            <AiOutlineCalculator />
+                                        </span>
+                                        <div>
+                                            <p className="text-xs font-black tracking-tight">Kasir Cepat (POS)</p>
+                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Solusi anti pesanan tertukar</p>
+                                        </div>
+                                    </>
+                                )}
+                            </NavLink>
+                        </li>
+
+                        {/* Menu 4: Riwayat Transaksi */}
+                        <li>
+                            <NavLink to="/riwayat" className={menuClass}>
+                                {({ isActive }) => (
+                                    <>
+                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                            <AiOutlineHistory />
+                                        </span>
+                                        <div>
+                                            <p className="text-xs font-black tracking-tight">Riwayat Transaksi</p>
+                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Penyimpanan data otomatis</p>
+                                        </div>
+                                    </>
+                                )}
+                            </NavLink>
+                        </li>
+
+                        {/* Menu 5: Laporan Omzet */}
+                        <li>
+                            <NavLink to="/laporan" className={menuClass}>
+                                {({ isActive }) => (
+                                    <>
+                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                            <AiOutlineBarChart />
+                                        </span>
+                                        <div>
+                                            <p className="text-xs font-black tracking-tight">Laporan Omzet</p>
+                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Analisis penjualan berkala</p>
+                                        </div>
+                                    </>
+                                )}
+                            </NavLink>
+                        </li>
+                    </ul>
                 </nav>
             </div>
 

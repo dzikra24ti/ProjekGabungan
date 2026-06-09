@@ -6,6 +6,8 @@
   const Dashboard = React.lazy(() => import("./pages/Dashboard"))
   const Riwayat = React.lazy(() => import("./pages/Riwayat"))
   const Kasir = React.lazy(() => import("./pages/Kasir"))
+  const Products = React.lazy(() => import("./pages/Products"))
+  const ProductDetail = React.lazy(() => import("./pages/ProductDetail"))
   const Laporan = React.lazy(() => import("./pages/Laporan"))
   const NotFound = React.lazy(() => import("./pages/Notfound"))
   import MainLayout from "./layouts/MainLayout";
@@ -22,6 +24,8 @@
           <Route path="/" element={<Login />} />
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/riwayat" element={<Riwayat />} />
           <Route path="/kasir" element={<Kasir />} />
           <Route path="/laporan" element={<Laporan />} />
