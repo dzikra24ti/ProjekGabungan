@@ -64,93 +64,106 @@ export default function Login() {
   ) : null;
 
   const loadingInfo = loading ? (
-    <div className="bg-yellow-50 border border-yellow-200 mb-5 p-4 text-sm font-medium text-yellow-700 rounded-2xl flex items-center">
-      <ImSpinner2 className="me-3 animate-spin text-lg text-yellow-600" />
-      Sedang memproses...
+    <div className="bg-stone-50 border border-stone-200 mb-5 p-4 text-sm font-medium text-stone-700 rounded-2xl flex items-center">
+      <ImSpinner2 className="me-3 animate-spin text-lg text-stone-600" />
+      Sedang memproses verifikasi...
     </div>
   ) : null;
 
   return (
-    /* Wrapper Utama: Menjaga posisi di tengah layar dan mencegah tampilan melebar */
-    <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center p-4">
+    /* Wrapper Utama: Menggunakan latar belakang abu-abu terang minimalis khas Patria */
+    <div className="min-h-screen w-full bg-stone-100/50 flex items-center justify-center p-4 font-sans">
       
-      {/* Container Putih: Membatasi lebar form agar tetap rapi */}
-      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+      {/* Container Putih Bertekstur Lembut */}
+      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-sm border border-stone-200/60">
         
+        {/* Identitas Logo Atas Menyesuaikan dengan Tema Warung Patria */}
         <div className="text-center mb-8">
-          <h2 className="text-[#F59E0B] font-black text-3xl tracking-tighter italic">
-            JAGO AYAM.
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-stone-900 rounded-xl text-stone-100 text-sm font-black uppercase tracking-wider mb-3">
+            🪵 Patria System
+          </div>
+          <h2 className="text-stone-900 font-black text-xl tracking-tight uppercase">
+            WARUNG PATRIA
           </h2>
-          <p className="text-gray-500 font-bold mt-1 text-sm">Welcome Back 👋</p>
+          <p className="text-stone-400 font-bold mt-1 text-[11px] uppercase tracking-widest">
+            Digital Order POS & Management
+          </p>
         </div>
 
         {/* Info Status */}
         {loadingInfo}
         {errorInfo}
         
-        {/* noValidate agar pesan error custom muncul tanpa gangguan balon browser */}
+        {/* Form Input dengan Aksen Warna Stone Global */}
         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
           <div>
-            <label className="block text-xs font-black text-gray-500 mb-2 uppercase tracking-wider">
+            <label className="block text-[10px] font-black text-stone-400 mb-2 uppercase tracking-widest">
               Email / Username
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
-                <AiOutlineMail size={20} />
+              <span className="absolute inset-y-0 left-4 flex items-center text-stone-400">
+                <AiOutlineMail size={18} />
               </span>
               <input
                 name="email"
                 value={dataForm.email}
                 onChange={handleChange}
                 type="text"
-                className={`w-full pl-12 pr-4 py-3 bg-gray-50 border ${error && !dataForm.email ? 'border-red-400' : 'border-yellow-100'} rounded-2xl focus:ring-2 focus:ring-yellow-400 outline-none transition-all text-sm font-medium`}
-                placeholder="kminchelle"
+                className={`w-full pl-12 pr-4 py-3.5 bg-stone-50 border ${
+                  error && !dataForm.email ? 'border-red-400' : 'border-stone-200/80'
+                } rounded-xl focus:ring-2 focus:ring-stone-800 outline-none transition-all text-sm font-medium text-stone-900 placeholder-stone-400`}
+                placeholder="Masukkan username anda"
               />
             </div>
           </div>
 
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-xs font-black text-gray-500 uppercase tracking-wider">
+              <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
                 Password
               </label>
-              <Link to="/forgot" className="text-xs font-bold text-yellow-600 hover:underline">
+              <Link to="/forgot" className="text-[11px] font-bold text-stone-500 hover:text-stone-900 transition-colors">
                 Lupa Password?
               </Link>
             </div>
             <div className="relative">
-              <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
-                <AiFillLock size={20} />
+              <span className="absolute inset-y-0 left-4 flex items-center text-stone-400">
+                <AiFillLock size={18} />
               </span>
               <input
                 name="password"
                 value={dataForm.password}
                 onChange={handleChange}
                 type="password"
-                className={`w-full pl-12 pr-4 py-3 bg-gray-50 border ${error && !dataForm.password ? 'border-red-400' : 'border-yellow-100'} rounded-2xl focus:ring-2 focus:ring-yellow-400 outline-none transition-all text-sm font-medium`}
+                className={`w-full pl-12 pr-4 py-3.5 bg-stone-50 border ${
+                  error && !dataForm.password ? 'border-red-400' : 'border-stone-200/80'
+                } rounded-xl focus:ring-2 focus:ring-stone-800 outline-none transition-all text-sm font-medium text-stone-900 placeholder-stone-400`}
                 placeholder="********"
               />
             </div>
           </div>
 
+          {/* Tombol Utama Hitam Pekat Sesuai Tombol Navbar/Sidebar Patria */}
           <button
             disabled={loading}
             type="submit"
-            className="w-full bg-[#F59E0B] hover:bg-yellow-600 disabled:bg-gray-400 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-yellow-200 active:scale-95 uppercase tracking-widest text-sm"
+            className="w-full bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 text-stone-50 font-black py-4 rounded-xl transition-all active:scale-[0.98] uppercase tracking-widest text-xs border border-stone-900"
           >
-            {loading ? "Sabar ya..." : "Masuk Sekarang"}
+            {loading ? "Memverifikasi..." : "Masuk Sistem"}
           </button>
         </form>
 
-        <p className="mt-8 text-center text-sm text-gray-500 font-medium">
-          Belum punya akun?{" "}
-          <Link to="/register" className="text-yellow-600 font-black hover:underline">
+        {/* Teks Navigasi Bawah */}
+        <p className="mt-8 text-center text-xs text-stone-400 font-medium">
+          Belum terdaftar di sistem?{" "}
+          <Link to="/register" className="text-stone-900 font-black hover:underline">
             Daftar Disini
           </Link>
         </p>
 
-        <div className="mt-10 text-center text-[10px] text-gray-400 font-medium uppercase tracking-widest">
-          © 2025 Jago Ayam Dashboard. All rights reserved.
+        {/* Footer Hak Cipta */}
+        <div className="mt-10 text-center text-[9px] text-stone-400 font-bold uppercase tracking-widest border-t border-stone-100 pt-4">
+          © 2026 Patria System V1.0. All rights reserved.
         </div>
       </div>
     </div>
