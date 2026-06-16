@@ -1,58 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AiOutlinePlus, AiOutlineMinus, AiOutlineShoppingCart, AiOutlineUser } from "react-icons/ai";
 import PageHeader from "../components/PageHeader";
+import axios from "axios";
 
 export default function Kasir() {
-    // 1. DATA MASTER MENU KEDAI (Lengkap dengan Gambar & Harga)
-    const DAFTAR_MENU = [
-        {
-            id: "teh_telor",
-            nama: "Teh Telor Bebek",
-            harga: 14000,
-            emoji: "🥚",
-            gambar: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=150&auto=format&fit=crop&q=60" // Teh/Kopi kocok tradisional
-        },
-        {
-            id: "bandrek",
-            nama: "Bandrek Susu Rempah",
-            harga: 12000,
-            emoji: "🪵",
-            gambar: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=150&auto=format&fit=crop&q=60" // Minuman rempah hangat
-        },
-        {
-            id: "kopi_kasar",
-            nama: "Kopi Kasar Tradisional",
-            harga: 8000,
-            emoji: "☕",
-            gambar: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=150&auto=format&fit=crop&q=60"
-        },
-        {
-            id: "roti_bakar",
-            nama: "Roti Bakar Srikaya",
-            harga: 10000,
-            emoji: "🍞",
-            gambar: "https://images.unsplash.com/photo-1584776296944-ab6fb57b0bdd?w=150&auto=format&fit=crop&q=60"
-        },
-        {
-            id: "indomie",
-            nama: "Indomie Rebus Telor",
-            harga: 13000,
-            emoji: "🍜",
-            gambar: "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=150&auto=format&fit=crop&q=60"
-        }
-    ];
-
-    // 2. STATE UTAMA
+    // 1. STATE UTAMA
+    const [daftarMenu, setDaftarMenu] = useState([]); // Menampung menu live dari Laravel
     const [nomorMeja, setNomorMeja] = useState("");
-    
-    // State keranjang belanja menggunakan Object berbasis ID menu { id_menu: jumlah }
-    const [keranjang, setKeranjang] = useState({
-        teh_telor: 0,
-        bandrek: 0,
-        kopi_kasar: 0,
-        roti_bakar: 0,
-        indomie: 0
-    });
+    const [keranjang, setKeranjang] = useState({}); // Menggunakan ID Produk database sebagai Key { 1: qty, 2: qty }
+    const [loading, setLoading] = useState(true);
+
+    // 2. AMBIL DATA MASTER MENU DARI LARAVEL
+    useEffect(() => {
+        axios.get("http://127.0.0.1:8000/api/products")
+            .then((response) => {
+                setDaftarMenu(response.data);
+                
+                // Inisialisasi struktur object keranjang berdasarkan ID produk asli di database
+                const strukturKeranjangAwal = {};
+                response.data.forEach(menu => {
+                    strukturKeranjangAwal[menu.id] = 0;
+                });
+                setKeranjang(strukturKeranjangAwal);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Gagal memuat master menu:", err);
+                alert("Gagal terhubung ke server Laravel. Pastikan php artisan serve aktif!");
+                setLoading(false);
+            });
+    }, []);
 
     // 3. FUNGSI UPDATE KUANTITAS (TAMBAH / KURANG)
     const ubahKuantitas = (id, aksi) => {
@@ -70,51 +47,82 @@ export default function Kasir() {
     // 4. PERHITUNGAN OTOMATIS (DERIVED STATE)
     const totalItem = Object.values(keranjang).reduce((a, b) => a + b, 0);
     
-    const totalBayar = DAFTAR_MENU.reduce((total, menu) => {
+    const totalBayar = daftarMenu.reduce((total, menu) => {
         const qty = keranjang[menu.id] || 0;
-        return total + (qty * menu.harga);
+        // Karena harga di database bernilai satuan (misal 14), kalikan 1000 untuk konversi ke Rupiah asli
+        return total + (qty * (menu.price * 1000));
     }, 0);
 
-    // 5. FUNGSI TOMBOL SIMPAN TRANSAKSI
+    // 5. FUNGSI TOMBOL SIMPAN TRANSAKSI KE LARAVEL
     const handleSimpanTransaksi = (e) => {
         e.preventDefault();
+        
         if (!nomorMeja.trim()) {
             alert("Harap isi Nomor Meja atau Nama Pelanggan terlebih dahulu!");
             return;
         }
-        if (totalBayar === 0) {
+        if (totalItem === 0) {
             alert("Harap pilih minimal 1 menu sebelum menyimpan transaksi!");
             return;
         }
-        
-        alert(`Transaksi untuk ${nomorMeja} senilai Rp ${totalBayar.toLocaleString("id-ID")} berhasil disimpan!`);
-        
-        // Reset form setelah simpan tuntas
-        setNomorMeja("");
-        setKeranjang({
-            teh_telor: 0,
-            bandrek: 0,
-            kopi_kasar: 0,
-            roti_bakar: 0,
-            indomie: 0
+
+        // Susun array items yang hanya berisi menu dengan kuantitas > 0
+        const itemsDikirim = [];
+        daftarMenu.forEach((menu) => {
+            const qty = keranjang[menu.id] || 0;
+            if (qty > 0) {
+                itemsDikirim.push({
+                    product_id: menu.id, // ID Numerik asli database (1, 2, 3, dst)
+                    quantity: qty
+                });
+            }
         });
+
+        // Payload data pembungkus sesuai validasi TransactionController Laravel
+        const payload = {
+            customer_name: nomorMeja,
+            items: itemsDikirim
+        };
+
+        // Kirim data transaksi ke backend Laravel
+        axios.post("http://127.0.0.1:8000/api/transactions", payload)
+            .then((response) => {
+                if (response.data.status === "success") {
+                    alert(`Transaksi untuk ${nomorMeja} senilai Rp ${totalBayar.toLocaleString("id-ID")} BERHASIL disimpan ke database!`);
+                    
+                    // Reset form setelah transaksi tuntas mendarat di database
+                    setNomorMeja("");
+                    setKeranjang((prev) => {
+                        const keranjangKosong = { ...prev };
+                        Object.keys(keranjangKosong).forEach(key => {
+                            keranjangKosong[key] = 0;
+                        });
+                        return keranjangKosong;
+                    });
+                }
+            })
+            .catch((error) => {
+                console.error("Error Transaksi:", error);
+                alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan transaksi.");
+            });
     };
+
+    if (loading) {
+        return <div className="p-8 text-center font-bold text-stone-500">Menghubungkan ke server Warung Patria...</div>;
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Navigasi Header Halaman */}
             <PageHeader 
                 title="Kasir Cepat (POS)" 
                 description="Input pesanan menu real-time terikat nomor meja guna menghindari risiko salah antar makanan." 
             />
 
-            {/* INTEGRATED POS LAYOUT */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
-                {/* SISI KIRI: INPUT IDENTITAS & SELEKSI DAFTAR MENU (7 COLUMN) */}
+                {/* SISI KIRI: INPUT IDENTITAS & SELEKSI DAFTAR MENU */}
                 <div className="lg:col-span-7 space-y-6">
                     
-                    {/* INPUT IDENTIFIKASI MEJA / ANTRIAN */}
                     <div className="bg-white p-5 rounded-2xl border border-stone-200/60 shadow-sm space-y-3">
                         <div className="flex items-center gap-2 text-stone-700 font-bold text-xs uppercase tracking-wider">
                             <AiOutlineUser className="text-base text-stone-400" />
@@ -130,33 +138,32 @@ export default function Kasir() {
                         />
                     </div>
 
-                    {/* DAFTAR MENU UTAMA KEDAI */}
                     <div className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm space-y-4">
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest border-b border-stone-100 pb-2">Daftar Menu Tersedia</p>
                         
                         <div className="divide-y divide-stone-100">
-                            {DAFTAR_MENU.map((menu) => {
+                            {daftarMenu.map((menu) => {
                                 const qty = keranjang[menu.id] || 0;
+                                const hargaRupiahAsli = menu.price * 1000;
                                 return (
                                     <div key={menu.id} className="py-4 flex items-center justify-between first:pt-0 last:pb-0">
                                         <div className="flex items-center gap-4">
-                                            {/* RENDER GAMBAR MENU DENGAN BACKUP EMOJI */}
                                             <div className="w-14 h-14 bg-stone-50 border border-stone-200/60 rounded-2xl overflow-hidden flex items-center justify-center text-xl shadow-inner relative select-none shrink-0">
+                                                {/* Menggunakan path file gambar lokal dari folder public Laravel */}
                                                 <img 
-                                                    src={menu.gambar} 
-                                                    alt={menu.nama}
-                                                    className="w-full h-full object-cover absolute inset-0"
-                                                    onError={(e) => { e.target.style.display = 'none'; }} // Menyembunyikan gambar jika jaringan error/offline
+                                                    src={`http://127.0.0.1:8000/${menu.thumbnail}`} 
+                                                    alt={menu.title}
+                                                    className="w-full h-full object-cover absolute inset-0 mix-blend-multiply"
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
                                                 />
-                                                <span className="relative z-0">{menu.emoji}</span>
+                                               
                                             </div>
                                             <div>
-                                                <h3 className="font-black text-sm text-stone-900 tracking-tight">{menu.nama}</h3>
-                                                <p className="text-xs text-stone-500 font-bold mt-0.5">Rp {menu.harga.toLocaleString("id-ID")}</p>
+                                                <h3 className="font-black text-sm text-stone-900 tracking-tight">{menu.title}</h3>
+                                                <p className="text-xs text-stone-500 font-bold mt-0.5">Rp {hargaRupiahAsli.toLocaleString("id-ID")}</p>
                                             </div>
                                         </div>
                                         
-                                        {/* COUNTER */}
                                         <div className="flex items-center bg-stone-100/80 border border-stone-200/60 rounded-xl p-1 shadow-inner">
                                             <button 
                                                 onClick={() => ubahKuantitas(menu.id, "kurang")} 
@@ -179,7 +186,7 @@ export default function Kasir() {
                     </div>
                 </div>
 
-                {/* SISI KANAN: RINGKASAN STRUK BILL / TRANSAKSI (5 COLUMN) */}
+                {/* SISI KANAN: RINGKASAN STRUK BILL / TRANSAKSI */}
                 <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-stone-200/60 shadow-sm flex flex-col justify-between space-y-6 sticky top-6">
                     <div>
                         <div className="flex justify-between items-center mb-4 pb-3 border-b border-stone-100">
@@ -191,7 +198,6 @@ export default function Kasir() {
                             </span>
                         </div>
 
-                        {/* DETAIL STRUK */}
                         <div className="space-y-3 text-xs font-bold text-stone-600">
                             <div className="flex justify-between">
                                 <span className="text-stone-400">Identitas Meja:</span>
@@ -206,16 +212,15 @@ export default function Kasir() {
 
                             <hr className="border-stone-100 my-2" />
 
-                            {/* List Rincian Belanja yang Kuantitasnya > 0 */}
                             <div className="space-y-2 bg-stone-50 p-3 rounded-xl border border-stone-200/30 text-[11px]">
-                                {DAFTAR_MENU.map((menu) => {
+                                {daftarMenu.map((menu) => {
                                     const qty = keranjang[menu.id] || 0;
-                                    if (qty === 0) return null; // Sembunyikan item jika porsi masih 0
+                                    if (qty === 0) return null;
                                     
                                     return (
                                         <div key={menu.id} className="flex justify-between text-stone-700">
-                                            <span>{menu.nama} (x{qty})</span>
-                                            <span>Rp {(qty * menu.harga).toLocaleString("id-ID")}</span>
+                                            <span>{menu.title} (x{qty})</span>
+                                            <span>Rp {(qty * (menu.price * 1000)).toLocaleString("id-ID")}</span>
                                         </div>
                                     );
                                 })}
@@ -227,7 +232,6 @@ export default function Kasir() {
                         </div>
                     </div>
 
-                    {/* FOOTER TOTAL HARGA & SUBMIT */}
                     <div className="space-y-4 pt-4 border-t border-stone-100">
                         <div className="flex justify-between items-baseline">
                             <span className="text-xs font-black text-stone-400 uppercase tracking-wider">Total Bayar:</span>

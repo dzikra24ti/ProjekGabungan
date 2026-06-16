@@ -1,17 +1,58 @@
+import { useState, useEffect } from "react";
 import { AiOutlineHistory, AiOutlineSearch, AiOutlineCalendar } from "react-icons/ai";
 import PageHeader from "../components/PageHeader";
+import axios from "axios";
 
 export default function Riwayat() {
-    // Data transaksi kedai dengan ID urut dari nomor 1
-    const dataRiwayat = [
-        { id: "01", waktu: "19:15", pelanggan: "Siti", item: "1x Teh Telor Bebek", total: 14000, status: "Selesai" },
-        { id: "02", waktu: "19:30", pelanggan: "Meja 01", item: "3x Bandrek Susu", total: 36000, status: "Selesai" },
-        { id: "03", waktu: "20:12", pelanggan: "Budi", item: "1x Bandrek, 1x Teh Telor", total: 26000, status: "Selesai" },
-        { id: "04", waktu: "20:45", pelanggan: "Meja 04", item: "2x Teh Telor Bebek", total: 28000, status: "Selesai" },
-    ];
+    // 1. STATE UTAMA
+    const [listTransaksi, setListTransaksi] = useState([]);
+    const [pencarian, setPencarian] = useState("");
+    const [loading, setLoading] = useState(true);
 
-    // Opsional: Membalik urutan agar transaksi terbaru (ID terbesar) muncul paling atas di tabel
-    const riwayatTerbaru = [...dataRiwayat].reverse();
+    // 2. AMBIL DATA DARI BACKEND LARAVEL
+    useEffect(() => {
+        axios.get("http://127.0.0.1:8000/api/transactions")
+            .then((response) => {
+                // Sisi Laravel sudah otomatis mengurutkan dari yang terbaru (descending)
+                setListTransaksi(response.data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Gagal memuat riwayat transaksi:", err);
+                alert("Gagal mengambil data dari server. Pastikan backend Laravel menyala.");
+                setLoading(false);
+            });
+    }, []);
+
+    // 3. LOGIKA UNTUK MENYUSUN TEKS RINCIAN PESANAN DARI TABEL DETAIL
+    const susunTeksPesanan = (details) => {
+        if (!details || details.length === 0) return "Tidak ada item";
+        
+        // Menggabungkan item menjadi teks tunggal seperti "2x Teh Telor Bebek, 1x Indomie"
+        return details.map(item => {
+            const namaMenu = item.product?.title || "Menu Dihapus";
+            return `${item.quantity}x ${namaMenu}`;
+        }).join(", ");
+    };
+
+    // 4. LOGIKA FORMAT JAM (Mengubah timestamp '2026-06-16T12:00:00.000000Z' menjadi '19:00')
+    const formatJam = (timestamp) => {
+        if (!timestamp) return "--:--";
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    };
+
+    // 5. FITUR PENCARIAN LIVE (Berdasarkan ID Nota atau Nama Pelanggan)
+    const riwayatDisaring = listTransaksi.filter((item) => {
+        const kataKunci = pencarian.toLowerCase();
+        const cocokNama = item.customer_name.toLowerCase().includes(kataKunci);
+        const cocokID = item.id.toString().includes(kataKunci);
+        return cocokNama || cocokID;
+    });
+
+    if (loading) {
+        return <div className="p-8 text-center font-bold text-stone-500">Memuat riwayat nota Warung Patria...</div>;
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in bg-stone-50 text-stone-800 font-sans">
@@ -30,6 +71,8 @@ export default function Riwayat() {
                     <input 
                         type="text" 
                         placeholder="Cari ID nota atau pelanggan..." 
+                        value={pencarian}
+                        onChange={(e) => setPencarian(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-bold focus:outline-none focus:border-stone-400 transition-colors placeholder:text-stone-400 shadow-inner"
                     />
                 </div>
@@ -53,23 +96,33 @@ export default function Riwayat() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100 text-xs font-bold text-stone-700">
-                            {riwayatTerbaru.map((row, index) => (
-                                <tr key={index} className="hover:bg-stone-50/40 transition-colors">
-                                    {/* Menambahkan simbol # di depan ID nomor urut */}
+                            {riwayatDisaring.map((row) => (
+                                <tr key={row.id} className="hover:bg-stone-50/40 transition-colors">
                                     <td className="py-4 px-6 font-black text-stone-900">#{row.id}</td>
-                                    <td className="py-4 px-6 text-stone-400 font-medium">{row.waktu}</td>
-                                    <td className="py-4 px-6">{row.pelanggan}</td>
-                                    <td className="py-4 px-6 font-medium text-stone-600">{row.item}</td>
+                                    <td className="py-4 px-6 text-stone-400 font-medium">{formatJam(row.created_at)} WIB</td>
+                                    <td className="py-4 px-6">{row.customer_name}</td>
+                                    <td className="py-4 px-6 font-medium text-stone-600">
+                                        {susunTeksPesanan(row.details)}
+                                    </td>
                                     <td className="py-4 px-6 text-right font-black text-stone-900">
-                                        Rp {row.total.toLocaleString("id-ID")}
+                                        {/* Karena harga di database bernilai satuan (misal 14), kalikan 1000 untuk sinkronisasi */}
+                                        Rp {(row.total_price * 1000).toLocaleString("id-ID")}
                                     </td>
                                     <td className="py-4 px-6 text-center">
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-stone-100 text-stone-700 border border-stone-200/40 uppercase tracking-wider">
-                                            ● {row.status}
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/40 uppercase tracking-wider">
+                                            ● Selesai
                                         </span>
                                     </td>
                                 </tr>
                             ))}
+
+                            {riwayatDisaring.length === 0 && (
+                                <tr>
+                                    <td colSpan="6" className="text-center text-stone-400 italic py-8 bg-stone-50/20">
+                                        Tidak ada riwayat transaksi yang cocok dengan pencarian.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
