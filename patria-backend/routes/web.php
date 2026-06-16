@@ -1,12 +1,12 @@
 <?php
 
-// use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Route;
 // use App\Http\Controllers\ProductController;
 // use App\Http\Controllers\TransactionController; // Pastikan ini di-import di atas
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+Route::get('/', function () {
+    return view('welcome');
+});
 
 
 // // Kita tambahkan awalan /api secara manual di sini agar struktur URL di React tetap rapi

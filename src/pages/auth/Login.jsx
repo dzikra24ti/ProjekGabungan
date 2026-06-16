@@ -27,27 +27,32 @@ export default function Login() {
     
     // Validasi manual agar box merah muncul jika input kosong
     if (!dataForm.email || !dataForm.password) {
-      setError("Username and password required");
+      setError("Email dan password wajib diisi");
       return;
     }
 
     setLoading(true);
     setError("");
 
+    // Mengalihkan tembakan ke API lokal Laravel sendiri
     axios
-      .post("https://dummyjson.com/user/login", {
-        username: dataForm.email, 
+      .post("http://127.0.0.1:8000/api/login", {
+        email: dataForm.email, // Menggunakan key 'email' sesuai validasi Laravel
         password: dataForm.password,
       })
       .then((response) => {
         if (response.status === 200) {
-          // Mengarahkan ke dashboard utama
+          // MENYIMPAN NAMA USER SECARA DINAMIS KE LOCALSTORAGE
+          // Diambil dari response data user yang dikirim oleh DashboardController@login
+          localStorage.setItem("user_name", response.data.user.name);
+
+          // Mengarahkan ke dashboard utama setelah sukses
           navigate("/dashboard"); 
         }
       })
       .catch((err) => {
-        // Menampilkan error jika kredensial salah
-        setError(err.response?.data?.message || "Login Gagal. Cek data Anda.");
+        // Menampilkan pesan error khusus dari custom response backend Laravel
+        setError(err.response?.data?.message || "Login Gagal. Cek kembali akun Anda.");
       })
       .finally(() => {
         setLoading(false);
@@ -98,7 +103,7 @@ export default function Login() {
         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
           <div>
             <label className="block text-[10px] font-black text-stone-400 mb-2 uppercase tracking-widest">
-              Email / Username
+              Email Pengguna
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-4 flex items-center text-stone-400">
@@ -108,11 +113,11 @@ export default function Login() {
                 name="email"
                 value={dataForm.email}
                 onChange={handleChange}
-                type="text"
+                type="email"
                 className={`w-full pl-12 pr-4 py-3.5 bg-stone-50 border ${
                   error && !dataForm.email ? 'border-red-400' : 'border-stone-200/80'
                 } rounded-xl focus:ring-2 focus:ring-stone-800 outline-none transition-all text-sm font-medium text-stone-900 placeholder-stone-400`}
-                placeholder="Masukkan username anda"
+                placeholder="masukkan_email@patria.com"
               />
             </div>
           </div>
