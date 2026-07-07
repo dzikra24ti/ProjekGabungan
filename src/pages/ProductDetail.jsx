@@ -1,53 +1,70 @@
-import { useParams } from "react-router-dom"
-import { useEffect, useState } from "react"
-import axios from "axios"
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabaseClient"; // Menggunakan Supabase Client Anda
 
 export default function ProductDetail() {
-    const { id } = useParams()
-    const [product, setProduct] = useState(null)
-    const [error, setError] = useState(null)
+    const { id } = useParams();
+    const [product, setProduct] = useState(null);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Mengubah URL dummyjson menjadi endpoint Laravel lokal lewat web.php
-  axios.get(`${import.meta.env.VITE_API_URL}/products/${id}`)
-            .then((response) => {
-                if (response.status !== 200) {
-                    setError(response.data?.message || "Gagal memuat data")
-                    return
-                }
-                setProduct(response.data)
-            })
-            .catch((err) => {
-                setError(err.response?.data?.message || err.message || "Terjadi kesalahan")
-            })
-    }, [id])
+        const fetchProductDetail = async () => {
+            try {
+                setError(null);
+                
+                // Mengambil satu data produk dari Supabase berdasarkan ID dari URL
+                const { data, error: supabaseError } = await supabase
+                    .from("products")
+                    .select("*")
+                    .eq("id", id)
+                    .single(); // .single() memastikan data dikembalikan dalam bentuk object, bukan array
 
-    if (error) return <div className="text-red-600 p-4 font-semibold">{error}</div>
-    if (!product) return <div className="p-4 text-stone-500">Loading...</div>
+                if (supabaseError) throw supabaseError;
+
+                setProduct(data);
+            } catch (err) {
+                console.error("Gagal memuat detail produk dari Supabase:", err);
+                setError(err.message || "Gagal memuat detail data menu.");
+            }
+        };
+
+        if (id) {
+            fetchProductDetail();
+        }
+    }, [id]);
+
+    if (error) return <div className="text-red-600 p-6 font-bold text-center">⚠️ {error}</div>;
+    if (!product) return <div className="p-6 text-stone-500 font-bold text-center animate-pulse">Loading menu...</div>;
+
+    const hargaRupiahAsli = Number(product.price);
 
     return (
-        <div className="p-6 bg-white rounded-xl shadow-lg max-w-lg mx-auto mt-6 flex flex-col items-center border border-stone-100">
+        <div className="p-6 bg-white rounded-2xl shadow-sm max-w-lg mx-auto mt-6 flex flex-col items-center border border-stone-200/60 animate-in fade-in duration-200">
             {/* Pembungkus gambar agar ukuran terkontrol dan berpusat */}
-            <div className="w-64 h-64 flex items-center justify-center overflow-hidden rounded-xl mb-4 bg-stone-50 p-2 border border-stone-100">
+            <div className="w-64 h-64 flex items-center justify-center overflow-hidden rounded-2xl mb-4 bg-stone-50 p-2 border border-stone-100">
                 <img
-                    /* Menggabungkan base URL Laravel port 8000 dengan path gambar dari database */
-                    src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${product.thumbnail}`}
+                    /* Membaca path file gambar langsung dari folder public lokal React */
+                    src={`/${product.thumbnail}`}
                     alt={product.title}
-                    /* mix-blend-multiply membantu menyatukan background gambar putih dengan box keabuan */
                     className="max-w-full max-h-full object-contain mix-blend-multiply"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                 />
             </div>
             
             {/* Informasi Produk */}
-            <div className="w-full text-left">
-                <h2 className="text-2xl font-black mb-2 text-stone-900 uppercase tracking-tight">{product.title}</h2>
-                <p className="text-stone-500 font-medium text-sm mb-1">Kategori: {product.category}</p>
-                <p className="text-stone-500 font-medium text-sm mb-1">Brand: {product.brand}</p>
+            <div className="w-full text-left space-y-1">
+                <h2 className="text-2xl font-black text-stone-900 uppercase tracking-tight mb-2">{product.title}</h2>
+                <p className="text-stone-500 font-bold text-sm">
+                    Kategori: <span className="text-stone-800">{product.category || "-"}</span>
+                </p>
+                <p className="text-stone-500 font-bold text-sm">
+                    Brand: <span className="text-stone-800">{product.brand || "Warung Patria"}</span>
+                </p>
                 
-                <p className="text-stone-900 font-black text-xl mt-2 pt-3 border-t border-stone-100">
-                    Harga: Rp {(product.price ).toLocaleString("id-ID")}
+                <p className="text-stone-900 font-black text-xl mt-3 pt-4 border-t border-stone-100">
+                    Harga: Rp {hargaRupiahAsli.toLocaleString("id-ID")}
                 </p>
             </div>
         </div>
-    )
+    );
 }

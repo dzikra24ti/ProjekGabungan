@@ -1,31 +1,115 @@
 import { useState, useEffect } from "react";
 import { AiOutlineBarChart, AiOutlineArrowUp, AiOutlineInbox, AiOutlineDollar, AiOutlineShopping } from "react-icons/ai";
 import PageHeader from "../components/PageHeader";
-import axios from "axios";
+import { supabase } from "../supabaseClient"; // Menggunakan Supabase Client Anda
 
 export default function Laporan() {
-    // 1. STATE UNTUK FILTER PERIODE WAKTU (hari_ini / bulan_ini)
+    // 1. STATE PERIODE WAKTU (hari_ini / bulan_ini)
     const [periode, setPeriode] = useState("hari_ini");
-    
-    // State untuk menampung data riil dari database Laravel
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // 2. AMBIL DATA DARI BACKEND TIAP PERIODE BERUBAH
+    // 2. AMBIL DATA DAN KALKULASI STATISTIK DARI SUPABASE
     useEffect(() => {
-        setLoading(true);
-        
-        // Menembak endpoint API dengan membawa parameter range (hari_ini / bulan_ini)
-        axios.get(`${import.meta.env.VITE_API_URL}/reports/omzet?range=${periode}`)
-            .then((response) => {
-                setReportData(response.data);
+        const fetchAndCalculateReport = async () => {
+            try {
+                setLoading(true);
+
+                // Menentukan pembatas waktu awal (timestamp) berdasarkan state periode
+                const rentangWaktu = new Date();
+                if (periode === "hari_ini") {
+                    rentangWaktu.setHours(0, 0, 0, 0);
+                } else if (periode === "bulan_ini") {
+                    rentangWaktu.setDate(1); // Set ke tanggal 1 di bulan berjalan
+                    rentangWaktu.setHours(0, 0, 0, 0);
+                }
+                const formatISOId = rentangWaktu.toISOString();
+
+                // Tarik data transactions beserta sub-details dan titles produknya
+                const { data: transactions, error } = await supabase
+                    .from("transactions")
+                    .select(`
+                        id,
+                        total_price,
+                        created_at,
+                        transaction_details (
+                            quantity,
+                            price,
+                            products (
+                                title
+                            )
+                        )
+                    `)
+                    .gte("created_at", formatISOId);
+
+                if (error) throw error;
+
+                // Logika kalkulasi matematika laporan (Agregasi manual via Frontend)
+                let totalPendapatan = 0;
+                let totalNota = transactions ? transactions.length : 0;
+                let totalPorsi = 0;
+                
+                // Map penampung hitungan frekuensi menu terjual
+                const mapMenu = {};
+
+                if (transactions && transactions.length > 0) {
+                    transactions.forEach(tx => {
+                        totalPendapatan += Number(tx.total_price || 0);
+
+                        if (tx.transaction_details) {
+                            tx.transaction_details.forEach(detail => {
+                                const qty = Number(detail.quantity || 0);
+                                totalPorsi += qty;
+
+                                const namaMenu = detail.products?.title || "Menu Dihapus";
+                                const subtotalItem = Number(detail.price || 0) * qty;
+
+                                if (!mapMenu[namaMenu]) {
+                                    mapMenu[namaMenu] = {
+                                        title: namaMenu,
+                                        kuantitas_terjual: 0,
+                                        subtotal_omzet: 0
+                                    };
+                                }
+                                mapMenu[namaMenu].kuantitas_terjual += qty;
+                                mapMenu[namaMenu].subtotal_omzet += subtotalItem;
+                            });
+                        }
+                    });
+                }
+
+                // Mengubah mapMenu menjadi array dan mengkalkulasi persentase kontribusi omzet
+                const rincianMenuRaw = Object.values(mapMenu);
+                const rincianMenu = rincianMenuRaw.map(item => {
+                    const kontribusiPercent = totalPendapatan > 0 
+                        ? ((item.subtotal_omzet / totalPendapatan) * 100).toFixed(1) 
+                        : 0;
+                    return {
+                        ...item,
+                        kontribusi: Number(kontribusiPercent)
+                    };
+                }).sort((a, b) => b.kuantitas_terjual - a.kuantitas_terjual); // Urutkan dari porsi paling laku
+
+                // Ambil jawara menu terlaris teratas
+                const menuTerlaris = rincianMenu.length > 0 ? rincianMenu[0].title : "Belum Ada";
+
+                setReportData({
+                    total_pendapatan: totalPendapatan,
+                    total_nota: totalNota,
+                    total_porsi: totalPorsi,
+                    menu_terlaris: menuTerlaris,
+                    rincian_menu: rincianMenu
+                });
+
+            } catch (error) {
+                console.error("Gagal memproses laporan bisnis dari Supabase:", error);
+            } finally {
                 setLoading(false);
-            })
-            .catch((error) => {
-                console.error("Gagal memuat laporan bisnis:", error);
-                setLoading(false);
-            });
-    }, [periode]); // [] diisi `periode` agar ketika tombol diklik, useEffect otomatis nge-fetch ulang data baru
+            }
+        };
+
+        fetchAndCalculateReport();
+    }, [periode]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-200 bg-stone-50 text-stone-800 font-sans">
@@ -55,7 +139,7 @@ export default function Laporan() {
 
             {/* LOGIKA LOADING / TAMPILAN JIKA DATA SEDANG DIPROSES */}
             {loading ? (
-                <div className="p-12 text-center text-xs font-black uppercase tracking-widest text-stone-400 bg-white border border-stone-200/60 rounded-2xl shadow-sm">
+                <div className="p-12 text-center text-xs font-black uppercase tracking-widest text-stone-400 bg-white border border-stone-200/60 rounded-2xl shadow-sm animate-pulse">
                     🔄 Menghitung Statistik Warung Patria...
                 </div>
             ) : (
@@ -71,7 +155,7 @@ export default function Laporan() {
                                     Rp {Number(reportData?.total_pendapatan || 0).toLocaleString("id-ID")}
                                 </h3>
                                 <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                    <AiOutlineArrowUp /> +12.4%
+                                    <AiOutlineArrowUp /> Real-time
                                 </span>
                             </div>
                             <div className="w-10 h-10 bg-stone-50 rounded-xl flex items-center justify-center text-stone-400 text-lg border border-stone-100">
@@ -150,7 +234,7 @@ export default function Laporan() {
                                             <td className="py-4 px-6 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <span className="text-stone-400 font-medium">{item.kontribusi}%</span>
-                                                    {/* Bar Progres Kecil Miniatur Visual */}
+                                                    {/* Bar Progres Kecil Visual */}
                                                     <div className="w-16 bg-stone-100 h-1.5 rounded-full overflow-hidden hidden sm:block">
                                                         <div 
                                                             className="bg-stone-700 h-full rounded-full" 
@@ -161,6 +245,14 @@ export default function Laporan() {
                                             </td>
                                         </tr>
                                     ))}
+                                    
+                                    {(reportData?.rincian_menu || []).length === 0 && (
+                                        <tr>
+                                            <td colSpan="4" className="text-center text-stone-400 italic py-8 bg-stone-50/20">
+                                                Belum ada data porsi produk terjual pada periode ini.
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>

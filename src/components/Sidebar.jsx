@@ -3,21 +3,24 @@ import {
     AiOutlineDashboard, 
     AiOutlineCalculator, 
     AiOutlineHistory, 
-    AiOutlineBarChart 
+    AiOutlineBarChart,
+    AiOutlineLogout 
 } from "react-icons/ai";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 export default function Sidebar() {
-// 1. Ambil data role dari localStorage, jika kosong default ke 'owner'
-const rawRole = localStorage.getItem("role") || "owner";
+    const navigate = useNavigate();
 
-// 2. Ubah semua huruf menjadi kecil dan bersihkan teks agar seragam
-let userRole = rawRole.toLowerCase().trim();
+    // 1. Ambil data role dari localStorage, jika kosong default ke 'owner'
+    const rawRole = localStorage.getItem("role") || "owner";
 
-// 3. Normalisasi: Jika di database tertulis "staff dapur" atau "staff_dapur", ubah menjadi "dapur"
-if (userRole.includes("dapur") || userRole.includes("staff")) {
-    userRole = "dapur";
-}
+    // 2. Ubah semua huruf menjadi kecil dan bersihkan teks agar seragam
+    let userRole = rawRole.toLowerCase().trim();
+
+    // 3. Normalisasi: Jika di database tertulis "staff dapur" atau "staff_dapur", ubah menjadi "dapur"
+    if (userRole.includes("dapur") || userRole.includes("staff")) {
+        userRole = "dapur";
+    }
 
     // Logika penataan class dinamis untuk menu aktif/tidak aktif
     const menuClass = ({ isActive }) =>
@@ -27,9 +30,16 @@ if (userRole.includes("dapur") || userRole.includes("staff")) {
                 : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
         }`;
 
+    // Fungsi Log Out untuk membersihkan storage sesi login
+    const handleLogout = () => {
+        localStorage.removeItem("role"); // Menghapus penanda role
+        // Jika ada item auth token atau sesi lain, silakan panggil removeItem di sini
+        navigate("/login");
+    };
+
     return (
         <aside className="w-72 bg-white h-screen border-r border-stone-200/80 flex flex-col justify-between p-6 shrink-0">
-            <div className="space-y-8">
+            <div className="space-y-8 overflow-y-auto no-scrollbar">
                 {/* LOGO APLIKASI */}
                 <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
                     <div className="w-9 h-9 bg-stone-800 rounded-xl flex items-center justify-center text-stone-100 text-lg">🪵</div>
@@ -162,16 +172,28 @@ if (userRole.includes("dapur") || userRole.includes("staff")) {
                 </nav>
             </div>
 
-            {/* STATUS DATABASE */}
-            <div className="bg-stone-50 p-4 rounded-xl border border-stone-200/40 text-[10px] text-stone-400 font-medium">
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-stone-500 animate-pulse"></div>
-                    <span className="font-black uppercase tracking-wider text-stone-600">Status Database</span>
+            {/* SEKSI STATUS DATABASE & TOMBOL KELUAR */}
+            <div className="space-y-4 pt-4 border-t border-stone-100">
+                {/* STATUS DATABASE */}
+                <div className="bg-stone-50 p-4 rounded-xl border border-stone-200/40 text-[10px] text-stone-400 font-medium">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span className="font-black uppercase tracking-wider text-stone-600">Status Database</span>
+                    </div>
+                    Integritas data lokal terjaga terikat nomor antrean meja.
+                    <div className="mt-2 text-[9px] font-black uppercase text-stone-500 tracking-wider">
+                        Role Aktif: {userRole}
+                    </div>
                 </div>
-                Integritas data lokal terjaga terikat nomor antrean meja.
-                <div className="mt-2 text-[9px] font-black uppercase text-stone-500 tracking-wider">
-                    Role Aktif: {userRole}
-                </div>
+
+                {/* TOMBOL LOG OUT */}
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2.5 px-4 py-3 bg-stone-900 hover:bg-stone-800 text-stone-50 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-[0.99]"
+                >
+                    <AiOutlineLogout className="text-sm" />
+                    Log Out 
+                </button>
             </div>
         </aside>
     );

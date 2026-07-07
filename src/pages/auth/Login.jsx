@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { AiFillLock, AiOutlineMail } from "react-icons/ai";
 import { BsFillExclamationDiamondFill } from "react-icons/bs"; 
 import { ImSpinner2 } from "react-icons/im"; 
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from '../../supabaseClient'; // Sesuaikan jalur folder ke supabaseClient kamu
 
 export default function Login() {
   const navigate = useNavigate();
@@ -33,23 +33,39 @@ export default function Login() {
     setLoading(true);
     setError("");
 
-axios.post(`${import.meta.env.VITE_API_URL}/register`, dataForm)
-      .then((response) => {
-        if (response.status === 200) {
-          // 🌟 PERBAIKAN DI SINI: Simpan nama & role murni dari response LoginController
-          localStorage.setItem("user_name", response.data.user_name);
-          localStorage.setItem("role", response.data.role); 
+    try {
+      // Mencari data karyawan di tabel 'employees' yang email dan password-nya cocok
+      const { data: employees, error: supabaseError } = await supabase
+        .from('employees')
+        .select('name, role')
+        .eq('email', dataForm.email)
+        .eq('password', dataForm.password);
 
-          // Mengarahkan ke dashboard utama setelah sukses
-          navigate("/dashboard"); 
-        }
-      })
-      .catch((err) => {
-        setError(err.response?.data?.message || "Login Gagal. Cek kembali akun Anda.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      if (supabaseError) {
+        throw new Error(supabaseError.message);
+      }
+
+      // Jika data tidak ditemukan atau password/email salah
+      if (!employees || employees.length === 0) {
+        throw new Error("Email atau Password salah. Cek kembali akun Anda.");
+      }
+
+      // Ambil data karyawan pertama yang ditemukan
+      const currentEmployee = employees[0];
+
+      // Simpan nama & role ke dalam localStorage
+      localStorage.setItem("user_name", currentEmployee.name);
+      localStorage.setItem("role", currentEmployee.role); 
+
+      // Mengarahkan ke dashboard utama setelah sukses login
+      navigate("/dashboard"); 
+
+    } catch (err) {
+      console.error("Login Gagal:", err.message);
+      setError(err.message || "Login Gagal. Terjadi kesalahan pada sistem.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const errorInfo = error ? (
@@ -143,7 +159,6 @@ axios.post(`${import.meta.env.VITE_API_URL}/register`, dataForm)
             {loading ? "Memverifikasi..." : "Masuk Sistem"}
           </button>
         </form>
-
 
         <div className="mt-10 text-center text-[9px] text-stone-400 font-bold uppercase tracking-widest border-t border-stone-100 pt-4">
           © 2026 Patria System V1.0. All rights reserved.

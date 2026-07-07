@@ -1,34 +1,43 @@
 import { useState, useEffect } from "react";
 import { AiOutlinePlus, AiOutlineMinus, AiOutlineShoppingCart, AiOutlineUser } from "react-icons/ai";
 import PageHeader from "../components/PageHeader";
-import axios from "axios";
+import { supabase } from "../supabaseClient"; // Menggunakan Supabase Client Anda
 
 export default function Kasir() {
     // 1. STATE UTAMA
-    const [daftarMenu, setDaftarMenu] = useState([]); // Menampung menu live dari Laravel
+    const [daftarMenu, setDaftarMenu] = useState([]); // Menampung menu live dari Supabase
     const [nomorMeja, setNomorMeja] = useState("");
     const [keranjang, setKeranjang] = useState({}); // Menggunakan ID Produk database sebagai Key { 1: qty, 2: qty }
     const [loading, setLoading] = useState(true);
 
-    // 2. AMBIL DATA MASTER MENU DARI LARAVEL
+    // 2. AMBIL DATA MASTER MENU DARI SUPABASE
     useEffect(() => {
-       axios.get(`${import.meta.env.VITE_API_URL}/products`)
-            .then((response) => {
-                setDaftarMenu(response.data);
+        const fetchMenu = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from("products")
+                    .select("*")
+                    .order("title", { ascending: true });
+
+                if (error) throw error;
+
+                setDaftarMenu(data || []);
                 
-                // Inisialisasi struktur object keranjang berdasarkan ID produk asli di database
+                // Inisialisasi struktur object keranjang berdasarkan ID produk asli di Supabase
                 const strukturKeranjangAwal = {};
-                response.data.forEach(menu => {
+                data.forEach(menu => {
                     strukturKeranjangAwal[menu.id] = 0;
                 });
                 setKeranjang(strukturKeranjangAwal);
+            } catch (err) {
+                console.error("Gagal memuat master menu dari Supabase:", err);
+                alert("Gagal terhubung ke database Supabase. Periksa jaringan Anda!");
+            } finally {
                 setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Gagal memuat master menu:", err);
-                alert("Gagal terhubung ke server Laravel. Pastikan php artisan serve aktif!");
-                setLoading(false);
-            });
+            }
+        };
+
+        fetchMenu();
     }, []);
 
     // 3. FUNGSI UPDATE KUANTITAS (TAMBAH / KURANG)
@@ -49,12 +58,11 @@ export default function Kasir() {
     
     const totalBayar = daftarMenu.reduce((total, menu) => {
         const qty = keranjang[menu.id] || 0;
-        // Karena harga di database bernilai satuan (misal 14), kalikan 1000 untuk konversi ke Rupiah asli
-        return total + (qty * (menu.price));
+        return total + (qty * Number(menu.price));
     }, 0);
 
-    // 5. FUNGSI TOMBOL SIMPAN TRANSAKSI KE LARAVEL
-    const handleSimpanTransaksi = (e) => {
+    // 5. FUNGSI TOMBOL SIMPAN TRANSAKSI KE SUPABASE
+    const handleSimpanTransaksi = async (e) => {
         e.preventDefault();
         
         if (!nomorMeja.trim()) {
@@ -66,49 +74,68 @@ export default function Kasir() {
             return;
         }
 
-        // Susun array items yang hanya berisi menu dengan kuantitas > 0
-        const itemsDikirim = [];
-        daftarMenu.forEach((menu) => {
-            const qty = keranjang[menu.id] || 0;
-            if (qty > 0) {
-                itemsDikirim.push({
-                    product_id: menu.id, // ID Numerik asli database (1, 2, 3, dst)
-                    quantity: qty
-                });
-            }
-        });
+        setLoading(true);
 
-        // Payload data pembungkus sesuai validasi TransactionController Laravel
-        const payload = {
-            customer_name: nomorMeja,
-            items: itemsDikirim
-        };
+        try {
+            // Langkah A: Masukkan data nota induk ke tabel 'transactions'
+            const { data: dataTransaksi, error: errorTransaksi } = await supabase
+                .from("transactions")
+                .insert([
+                    {
+                        customer_name: nomorMeja,
+                        total_quantity: totalItem,
+                        total_price: totalBayar
+                    }
+                ])
+                .select()
+                .single(); // Mengambil satu baris data transaksi yang baru saja dibuat
 
-        // Kirim data transaksi ke backend Laravel
-       axios.post(`${import.meta.env.VITE_API_URL}/transactions`, payload)
-            .then((response) => {
-                if (response.data.status === "success") {
-                    alert(`Transaksi untuk ${nomorMeja} senilai Rp ${totalBayar.toLocaleString("id-ID")} BERHASIL disimpan ke database!`);
-                    
-                    // Reset form setelah transaksi tuntas mendarat di database
-                    setNomorMeja("");
-                    setKeranjang((prev) => {
-                        const keranjangKosong = { ...prev };
-                        Object.keys(keranjangKosong).forEach(key => {
-                            keranjangKosong[key] = 0;
-                        });
-                        return keranjangKosong;
+            if (errorTransaksi) throw errorTransaksi;
+
+            // Langkah B: Susun data item detail menggunakan transaction_id yang baru didapat
+            const detailItems = [];
+            daftarMenu.forEach((menu) => {
+                const qty = keranjang[menu.id] || 0;
+                if (qty > 0) {
+                    detailItems.push({
+                        transaction_id: dataTransaksi.id, // Menyambungkan relasi Foreign Key
+                        product_id: menu.id,
+                        quantity: qty,
+                        price: Number(menu.price)
                     });
                 }
-            })
-            .catch((error) => {
-                console.error("Error Transaksi:", error);
-                alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan transaksi.");
             });
+
+            // Langkah C: Masukkan sekumpulan item sekaligus (Bulk Insert) ke tabel 'transaction_details'
+            const { error: errorDetail } = await supabase
+                .from("transaction_details")
+                .insert(detailItems);
+
+            if (errorDetail) throw errorDetail;
+
+            // Jika semua langkah aman:
+            alert(`Transaksi untuk ${nomorMeja} senilai Rp ${totalBayar.toLocaleString("id-ID")} BERHASIL disimpan ke Supabase!`);
+            
+            // Reset form setelah transaksi tuntas mendarat di database
+            setNomorMeja("");
+            setKeranjang((prev) => {
+                const keranjangKosong = { ...prev };
+                Object.keys(keranjangKosong).forEach(key => {
+                    keranjangKosong[key] = 0;
+                });
+                return keranjangKosong;
+            });
+
+        } catch (error) {
+            console.error("Error Simpan Transaksi Supabase:", error);
+            alert("Terjadi kesalahan sistem saat menyimpan data transaksi.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (loading) {
-        return <div className="p-8 text-center font-bold text-stone-500">Menghubungkan ke server Warung Patria...</div>;
+        return <div className="p-8 text-center font-bold text-stone-500">Memproses data dengan database Warung Patria...</div>;
     }
 
     return (
@@ -144,19 +171,18 @@ export default function Kasir() {
                         <div className="divide-y divide-stone-100">
                             {daftarMenu.map((menu) => {
                                 const qty = keranjang[menu.id] || 0;
-                                const hargaRupiahAsli = menu.price ;
+                                const hargaRupiahAsli = Number(menu.price);
                                 return (
                                     <div key={menu.id} className="py-4 flex items-center justify-between first:pt-0 last:pb-0">
                                         <div className="flex items-center gap-4">
                                             <div className="w-14 h-14 bg-stone-50 border border-stone-200/60 rounded-2xl overflow-hidden flex items-center justify-center text-xl shadow-inner relative select-none shrink-0">
-                                                {/* Menggunakan path file gambar lokal dari folder public Laravel */}
+                                                {/* Menggunakan folder public lokal React untuk memanggil aset gambar */}
                                                 <img 
-                                                    src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${menu.thumbnail}`}
+                                                    src={`/${menu.thumbnail}`}
                                                     alt={menu.title}
                                                     className="w-full h-full object-cover absolute inset-0 mix-blend-multiply"
                                                     onError={(e) => { e.target.style.display = 'none'; }}
                                                 />
-                                               
                                             </div>
                                             <div>
                                                 <h3 className="font-black text-sm text-stone-900 tracking-tight">{menu.title}</h3>
@@ -220,7 +246,7 @@ export default function Kasir() {
                                     return (
                                         <div key={menu.id} className="flex justify-between text-stone-700">
                                             <span>{menu.title} (x{qty})</span>
-                                            <span>Rp {(qty * (menu.price)).toLocaleString("id-ID")}</span>
+                                            <span>Rp {(qty * Number(menu.price)).toLocaleString("id-ID")}</span>
                                         </div>
                                     );
                                 })}

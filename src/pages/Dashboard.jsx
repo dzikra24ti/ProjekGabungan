@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { AiOutlineCheck, AiOutlineDollar, AiOutlineDashboard, AiOutlineUser } from "react-icons/ai";
 import PageHeader from "../components/PageHeader";
-import axios from "axios";
+import { supabase } from "../supabaseClient"; // Menggunakan Supabase Client Anda
 
 export default function Dashboard() {
-    const [dashboardData, setDashboardData] = useState(null);
+    const [omzet, setOmzet] = useState(0);
+    const [totalTransaksi, setTotalTransaksi] = useState(0);
     const [loading, setLoading] = useState(true);
     
     // Mengambil nama user yang disimpan saat login dari localStorage.
@@ -14,16 +15,40 @@ export default function Dashboard() {
     });
 
     useEffect(() => {
-        // Menembak API khusus rangkuman data operasional dashboard hari ini
-   axios.get(`${import.meta.env.VITE_API_URL}/dashboard/summary`)
-            .then((response) => {
-                setDashboardData(response.data);
+        const fetchDashboardSummary = async () => {
+            try {
+                setLoading(true);
+
+                // Buat rentang waktu hari ini (mulai dari jam 00:00:00 ISO String)
+                const hariIni = new Date();
+                hariIni.setHours(0, 0, 0, 0);
+                const formatISOId = hariIni.toISOString();
+
+                // Mengambil data transaksi yang dibuat hanya hari ini
+                const { data: transactions, error } = await supabase
+                    .from("transactions")
+                    .select("total_price")
+                    .gte("created_at", formatISOId);
+
+                if (error) throw error;
+
+                // Hitung agregasi summary dari data array yang kembali
+                if (transactions && transactions.length > 0) {
+                    const hitungOmzet = transactions.reduce((acc, curr) => acc + Number(curr.total_price || 0), 0);
+                    setOmzet(hitungOmzet);
+                    setTotalTransaksi(transactions.length);
+                } else {
+                    setOmzet(0);
+                    setTotalTransaksi(0);
+                }
+            } catch (error) {
+                console.error("Gagal memuat data dashboard summary dari Supabase:", error);
+            } finally {
                 setLoading(false);
-            })
-            .catch((error) => {
-                console.error("Gagal memuat data dashboard:", error);
-                setLoading(false);
-            });
+            }
+        };
+
+        fetchDashboardSummary();
     }, []);
 
     return (
@@ -43,20 +68,9 @@ export default function Dashboard() {
                 <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200/80 shadow-sm flex items-center justify-between">
                     <div>
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Omzet Hari Ini</p>
-<p className="text-lg font-black tracking-tight text-stone-900">
-    {loading ? "Menghitung..." : (() => {
-        // 1. Ambil nilai omzet dari API
-        const rawOmzet = dashboardData?.omzet_hari_ini || 0;
-        
-        // 2. Gunakan Math.round atau parseInt untuk membuang pecahan desimal (.00) dari database
-        const cleanInteger = Math.round(Number(rawOmzet));
-        
-        // 3. Jika nilainya melompat ke puluhan juta akibat salah pembacaan tipe data, bagi dengan 1000
-        const finalOmzet = cleanInteger >= 10000000 ? cleanInteger / 1000 : cleanInteger;
-
-        return `Rp ${finalOmzet.toLocaleString("id-ID")}`;
-    })()}
-</p>
+                        <p className="text-lg font-black tracking-tight text-stone-900">
+                            {loading ? "Menghitung..." : `Rp ${omzet.toLocaleString("id-ID")}`}
+                        </p>
                     </div>
                     <div className="w-10 h-10 bg-stone-200/60 rounded-xl flex items-center justify-center text-stone-600 shadow-inner">
                         <AiOutlineDollar className="text-lg" />
@@ -68,7 +82,7 @@ export default function Dashboard() {
                     <div>
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Volume Penjualan</p>
                         <p className="text-lg font-black tracking-tight text-stone-900">
-                            {loading ? "Memuat..." : `${dashboardData?.transaksi_hari_ini || 0} Transaksi`}
+                            {loading ? "Memuat..." : `${totalTransaksi} Transaksi`}
                         </p>
                     </div>
                     <div className="w-10 h-10 bg-stone-200/60 rounded-xl flex items-center justify-center text-stone-600 shadow-inner">

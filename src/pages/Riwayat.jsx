@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AiOutlineHistory, AiOutlineSearch, AiOutlineCalendar } from "react-icons/ai";
 import PageHeader from "../components/PageHeader";
-import axios from "axios";
+import { supabase } from "../supabaseClient"; // Menggunakan Supabase Client Anda
 
 export default function Riwayat() {
     // 1. STATE UTAMA
@@ -9,33 +9,59 @@ export default function Riwayat() {
     const [pencarian, setPencarian] = useState("");
     const [loading, setLoading] = useState(true);
 
-    // 2. AMBIL DATA DARI BACKEND LARAVEL
+    // 2. AMBIL DATA DARI SUPABASE DENGAN RELATION JOIN
     useEffect(() => {
-        axios.get(`${import.meta.env.VITE_API_URL}/transactions`)
-            .then((response) => {
-                // Sisi Laravel sudah otomatis mengurutkan dari yang terbaru (descending)
-                setListTransaksi(response.data);
+        const fetchRiwayatTransaksi = async () => {
+            try {
+                setLoading(true);
+                
+                // Melakukan Eager Loading / Join tabel transaksi -> detail -> produk bawaan Supabase
+                const { data, error } = await supabase
+                    .from("transactions")
+                    .select(`
+                        id,
+                        customer_name,
+                        total_quantity,
+                        total_price,
+                        created_at,
+                        transaction_details (
+                            id,
+                            quantity,
+                            price,
+                            products (
+                                title
+                            )
+                        )
+                    `)
+                    .order("created_at", { ascending: false }); // Mengurutkan dari transaksi terbaru
+
+                if (error) throw error;
+
+                setListTransaksi(data || []);
+            } catch (err) {
+                console.error("Gagal memuat riwayat transaksi dari Supabase:", err);
+                alert("Gagal mengambil data nota. Pastikan koneksi internet & Supabase aktif.");
+            } finally {
                 setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Gagal memuat riwayat transaksi:", err);
-                alert("Gagal mengambil data dari server. Pastikan backend Laravel menyala.");
-                setLoading(false);
-            });
+            }
+        };
+
+        fetchRiwayatTransaksi();
     }, []);
 
-    // 3. LOGIKA UNTUK MENYUSUN TEKS RINCIAN PESANAN DARI TABEL DETAIL
+    // 3. LOGIKA UNTUK MENYUSUN TEKS RINCIAN PESANAN DARI STRUKTUR JOIN SUPABASE
     const susunTeksPesanan = (details) => {
         if (!details || details.length === 0) return "Tidak ada item";
         
         // Menggabungkan item menjadi teks tunggal seperti "2x Teh Telor Bebek, 1x Indomie"
         return details.map(item => {
-            const namaMenu = item.product?.title || "Menu Dihapus";
+            // Menyesuaikan pembacaan objek produk hasil join relational database Supabase
+            const namaMenu = item.products?.title || "Menu Dihapus";
             return `${item.quantity}x ${namaMenu}`;
         }).join(", ");
     };
 
-    // 4. LOGIKA FORMAT JAM (Mengubah timestamp '2026-06-16T12:00:00.000000Z' menjadi '19:00')
+    // 4. LOGIKA FORMAT JAM (Mengubah timestamp ISO menjadi format lokal jam '19:00')
     const formatJam = (timestamp) => {
         if (!timestamp) return "--:--";
         const date = new Date(timestamp);
@@ -45,13 +71,13 @@ export default function Riwayat() {
     // 5. FITUR PENCARIAN LIVE (Berdasarkan ID Nota atau Nama Pelanggan)
     const riwayatDisaring = listTransaksi.filter((item) => {
         const kataKunci = pencarian.toLowerCase();
-        const cocokNama = item.customer_name.toLowerCase().includes(kataKunci);
+        const cocokNama = (item.customer_name || "").toLowerCase().includes(kataKunci);
         const cocokID = item.id.toString().includes(kataKunci);
         return cocokNama || cocokID;
     });
 
     if (loading) {
-        return <div className="p-8 text-center font-bold text-stone-500">Memuat riwayat nota Warung Patria...</div>;
+        return <div className="p-8 text-center font-bold text-stone-500 animate-pulse">Memuat riwayat nota Warung Patria...</div>;
     }
 
     return (
@@ -60,7 +86,7 @@ export default function Riwayat() {
             {/* 1. HEADER HALAMAN */}
             <PageHeader 
                 icon={<AiOutlineHistory />}
-                title="Riwayat Transaksi" 
+                title="Riwayat Transaksi & Pesanan" 
                 description="Daftar seluruh rekaman nota penjualan dan pemesanan pelanggan yang berhasil disimpan." 
             />
 
@@ -102,11 +128,11 @@ export default function Riwayat() {
                                     <td className="py-4 px-6 text-stone-400 font-medium">{formatJam(row.created_at)} WIB</td>
                                     <td className="py-4 px-6">{row.customer_name}</td>
                                     <td className="py-4 px-6 font-medium text-stone-600">
-                                        {susunTeksPesanan(row.details)}
+                                        {/* Memasukkan array child transaction_details hasil query join */}
+                                        {susunTeksPesanan(row.transaction_details)}
                                     </td>
                                     <td className="py-4 px-6 text-right font-black text-stone-900">
-                                        {/* Karena harga di database bernilai satuan (misal 14), kalikan 1000 untuk sinkronisasi */}
-                                        Rp {(row.total_price).toLocaleString("id-ID")}
+                                        Rp {Number(row.total_price || 0).toLocaleString("id-ID")}
                                     </td>
                                     <td className="py-4 px-6 text-center">
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/40 uppercase tracking-wider">

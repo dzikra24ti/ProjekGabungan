@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { AiFillLock, AiOutlineMail, AiOutlineUser } from "react-icons/ai";
 import { BsFillExclamationDiamondFill } from "react-icons/bs";
 import { ImSpinner2 } from "react-icons/im";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -18,9 +18,6 @@ export default function Register() {
     password_confirmation: "",
     role: "kasir", // Default pilihan role baru
   });
-
-  // Validasi Hak Akses: Hanya Owner yang boleh mengakses halaman ini
-
 
   const handleChange = (evt) => {
     const { name, value } = evt.target;
@@ -48,26 +45,40 @@ export default function Register() {
 
     setLoading(true);
 
-axios.post(`${import.meta.env.VITE_API_URL}/register`, dataForm)
-      .then((response) => {
-        if (response.status === 201 || response.status === 200) {
-          setSuccess("Akun karyawan berhasil didaftarkan ke sistem!");
-          // Reset form setelah sukses mendaftar
-          setDataForm({
-            name: "",
-            email: "",
-            password: "",
-            password_confirmation: "",
-            role: "kasir",
-          });
-        }
-      })
-      .catch((err) => {
-        setError(err.response?.data?.message || "Gagal mendaftarkan akun. Periksa kembali data.");
-      })
-      .finally(() => {
-        setLoading(false);
+    try {
+      // Mengirim langsung ke tabel 'employees' di Supabase
+      const { data, error: supabaseError } = await supabase
+        .from('employees') 
+        .insert([
+          { 
+            name: dataForm.name, 
+            email: dataForm.email, 
+            role: dataForm.role,
+            password: dataForm.password // Memasukkan password ke database
+          },
+        ]);
+
+      if (supabaseError) {
+        throw new Error(supabaseError.message);
+      }
+
+      setSuccess("Akun karyawan berhasil didaftarkan ke Supabase!");
+      
+      // Reset form setelah sukses mendaftar
+      setDataForm({
+        name: "",
+        email: "",
+        password: "",
+        password_confirmation: "",
+        role: "kasir",
       });
+
+    } catch (err) {
+      console.error("Gagal mendaftar:", err.message);
+      setError(err.message || "Gagal mendaftarkan akun. Periksa kembali data.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -118,7 +129,7 @@ axios.post(`${import.meta.env.VITE_API_URL}/register`, dataForm)
               Nama Lengkap Karyawan
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0left-4 flex items-center text-stone-400 pl-4">
+              <span className="absolute inset-y-0 left-4 flex items-center text-stone-400">
                 <AiOutlineUser size={18} />
               </span>
               <input
@@ -222,7 +233,7 @@ axios.post(`${import.meta.env.VITE_API_URL}/register`, dataForm)
           <button
             type="button"
             onClick={() => navigate("/dashboard")}
-           className="w-full bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 text-stone-50 font-black py-4 rounded-xl transition-all active:scale-[0.98] uppercase tracking-widest text-xs border border-stone-900 mt-2"
+            className="w-full bg-stone-900 hover:bg-stone-800 disabled:bg-stone-300 text-stone-50 font-black py-4 rounded-xl transition-all active:scale-[0.98] uppercase tracking-widest text-xs border border-stone-900 mt-2"
           >
             Kembali ke Dashboard
           </button>
