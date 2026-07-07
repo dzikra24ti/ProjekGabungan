@@ -20,23 +20,7 @@ export default function Register() {
   });
 
   // Validasi Hak Akses: Hanya Owner yang boleh mengakses halaman ini
-  const currentRole = localStorage.getItem("role") || "";
-  if (currentRole.toLowerCase().trim() !== "owner") {
-    return (
-      <div className="min-h-screen w-full bg-stone-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-sm border border-stone-200 text-center">
-          <div className="text-red-500 text-4xl mb-3">⚠️</div>
-          <h2 className="font-black text-stone-900 text-lg uppercase tracking-tight">Akses Ditolak</h2>
-          <p className="text-stone-500 text-xs mt-2 font-medium">
-            Hanya akun dengan posisi <b className="text-stone-900">OWNER</b> yang diizinkan untuk mendaftarkan karyawan baru ke sistem.
-          </p>
-          <Link to="/login" className="inline-block mt-6 bg-stone-900 text-stone-50 text-xs font-black px-6 py-3 rounded-xl uppercase tracking-wider">
-            Kembali ke Login
-          </Link>
-        </div>
-      </div>
-    );
-  }
+
 
   const handleChange = (evt) => {
     const { name, value } = evt.target;
