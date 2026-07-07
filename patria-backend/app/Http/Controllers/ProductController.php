@@ -62,7 +62,6 @@ class ProductController extends Controller
         $product = Product::create([
             'title' => $request->title,
             'price' => $request->price,
-            'stock' => $request->stock,
         ]);
 
         return response()->json([
@@ -91,14 +90,12 @@ class ProductController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'stock' => 'required|integer',
         ]);
 
         // Eksekusi perubahan data di database
         $product->update([
             'title' => $request->title,
             'price' => $request->price,
-            'stock' => $request->stock,
         ]);
 
         return response()->json([

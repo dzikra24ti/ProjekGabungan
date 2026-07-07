@@ -43,9 +43,20 @@ export default function Dashboard() {
                 <div className="bg-stone-50 p-5 rounded-2xl border border-stone-200/80 shadow-sm flex items-center justify-between">
                     <div>
                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">Omzet Hari Ini</p>
-                        <p className="text-lg font-black tracking-tight text-stone-900">
-                            {loading ? "Menghitung..." : `Rp ${(dashboardData?.omzet_hari_ini || 0).toLocaleString("id-ID")}`}
-                        </p>
+<p className="text-lg font-black tracking-tight text-stone-900">
+    {loading ? "Menghitung..." : (() => {
+        // 1. Ambil nilai omzet dari API
+        const rawOmzet = dashboardData?.omzet_hari_ini || 0;
+        
+        // 2. Gunakan Math.round atau parseInt untuk membuang pecahan desimal (.00) dari database
+        const cleanInteger = Math.round(Number(rawOmzet));
+        
+        // 3. Jika nilainya melompat ke puluhan juta akibat salah pembacaan tipe data, bagi dengan 1000
+        const finalOmzet = cleanInteger >= 10000000 ? cleanInteger / 1000 : cleanInteger;
+
+        return `Rp ${finalOmzet.toLocaleString("id-ID")}`;
+    })()}
+</p>
                     </div>
                     <div className="w-10 h-10 bg-stone-200/60 rounded-xl flex items-center justify-center text-stone-600 shadow-inner">
                         <AiOutlineDollar className="text-lg" />

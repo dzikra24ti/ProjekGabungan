@@ -8,7 +8,18 @@ import {
 import { NavLink } from "react-router-dom";
 
 export default function Sidebar() {
-    // Logika penataan class dinamis dari modul (menggunakan warna tema stone Anda)
+// 1. Ambil data role dari localStorage, jika kosong default ke 'owner'
+const rawRole = localStorage.getItem("role") || "owner";
+
+// 2. Ubah semua huruf menjadi kecil dan bersihkan teks agar seragam
+let userRole = rawRole.toLowerCase().trim();
+
+// 3. Normalisasi: Jika di database tertulis "staff dapur" atau "staff_dapur", ubah menjadi "dapur"
+if (userRole.includes("dapur") || userRole.includes("staff")) {
+    userRole = "dapur";
+}
+
+    // Logika penataan class dinamis untuk menu aktif/tidak aktif
     const menuClass = ({ isActive }) =>
         `w-full flex items-start gap-3.5 px-3 py-3 rounded-xl transition-all text-left group ${
             isActive 
@@ -32,92 +43,121 @@ export default function Sidebar() {
                 <nav className="space-y-1.5">
                     <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest pl-3 mb-3">Menu Utama</p>
                     
-                    {/* Daftar Menu List ditulis manual tanpa array map */}
                     <ul className="space-y-1.5">
-                        {/* Menu 1: Overview Dashboard */}
-                        <li>
-                            <NavLink to="/dashboard" className={menuClass}>
-                                {({ isActive }) => (
-                                    <>
-                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
-                                            <AiOutlineDashboard />
-                                        </span>
-                                        <div>
-                                            <p className="text-xs font-black tracking-tight">Overview Dashboard</p>
-                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Ringkasan data hari ini</p>
-                                        </div>
-                                    </>
-                                )}
-                            </NavLink>
-                        </li>
+                        
+                        {/* 1. Overview Dashboard (Akses: Owner, Kasir, Staff Dapur) */}
+                        {(userRole === "owner" || userRole === "kasir" || userRole === "dapur") && (
+                            <li>
+                                <NavLink to="/dashboard" className={menuClass}>
+                                    {({ isActive }) => (
+                                        <>
+                                            <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                                <AiOutlineDashboard />
+                                            </span>
+                                            <div>
+                                                <p className="text-xs font-black tracking-tight">Overview Dashboard</p>
+                                                <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Ringkasan data hari ini</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </NavLink>
+                            </li>
+                        )}
 
-                        {/* Menu 2: Products */}
-                        <li>
-                            <NavLink to="/products" className={menuClass}>
-                                {({ isActive }) => (
-                                    <>
-                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
-                                            <MdNoFood />
-                                        </span>
-                                        <div>
-                                            <p className="text-xs font-black tracking-tight">Products</p>
-                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Menu Anti Lapar</p>
-                                        </div>
-                                    </>
-                                )}
-                            </NavLink>
-                        </li>
+                        {/* 2. Products (Akses: Owner, Kasir, Staff Dapur) */}
+                        {(userRole === "owner" || userRole === "kasir" || userRole === "dapur") && (
+                            <li>
+                                <NavLink to="/products" className={menuClass}>
+                                    {({ isActive }) => (
+                                        <>
+                                            <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                                <MdNoFood />
+                                            </span>
+                                            <div>
+                                                <p className="text-xs font-black tracking-tight">Products</p>
+                                                <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Menu Anti Lapar</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </NavLink>
+                            </li>
+                        )}
 
-                        {/* Menu 3: Kasir Cepat (POS) */}
-                        <li>
-                            <NavLink to="/kasir" className={menuClass}>
-                                {({ isActive }) => (
-                                    <>
-                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
-                                            <AiOutlineCalculator />
-                                        </span>
-                                        <div>
-                                            <p className="text-xs font-black tracking-tight">Kasir Cepat (POS)</p>
-                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Solusi anti pesanan tertukar</p>
-                                        </div>
-                                    </>
-                                )}
-                            </NavLink>
-                        </li>
+                        {/* 3. Kasir Cepat (POS) (Akses: HANYA Kasir) */}
+                        {userRole === "kasir" && (
+                            <li>
+                                <NavLink to="/kasir" className={menuClass}>
+                                    {({ isActive }) => (
+                                        <>
+                                            <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                                <AiOutlineCalculator />
+                                            </span>
+                                            <div>
+                                                <p className="text-xs font-black tracking-tight">Kasir Cepat (POS)</p>
+                                                <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Solusi anti pesanan tertukar</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </NavLink>
+                            </li>
+                        )}
 
-                        {/* Menu 4: Riwayat Transaksi */}
-                        <li>
-                            <NavLink to="/riwayat" className={menuClass}>
-                                {({ isActive }) => (
-                                    <>
-                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
-                                            <AiOutlineHistory />
-                                        </span>
-                                        <div>
-                                            <p className="text-xs font-black tracking-tight">Riwayat Transaksi</p>
-                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Penyimpanan data otomatis</p>
-                                        </div>
-                                    </>
-                                )}
-                            </NavLink>
-                        </li>
+                        {/* 4. Riwayat Transaksi (Akses: Owner, Kasir, Staff Dapur) */}
+                        {(userRole === "owner" || userRole === "kasir" || userRole === "dapur") && (
+                            <li>
+                                <NavLink to="/riwayat" className={menuClass}>
+                                    {({ isActive }) => (
+                                        <>
+                                            <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                                <AiOutlineHistory />
+                                            </span>
+                                            <div>
+                                                <p className="text-xs font-black tracking-tight">Riwayat Transaksi</p>
+                                                <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Penyimpanan data otomatis</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </NavLink>
+                            </li>
+                        )}
 
-                        {/* Menu 5: Laporan Omzet */}
-                        <li>
-                            <NavLink to="/laporan" className={menuClass}>
-                                {({ isActive }) => (
-                                    <>
-                                        <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
-                                            <AiOutlineBarChart />
-                                        </span>
-                                        <div>
-                                            <p className="text-xs font-black tracking-tight">Laporan Omzet</p>
-                                            <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Analisis penjualan berkala</p>
-                                        </div>
-                                    </>
-                                )}
-                            </NavLink>
-                        </li>
+                        {/* 5. Laporan Omzet (Akses: HANYA Owner) */}
+                        {userRole === "owner" && (
+                            <li>
+                                <NavLink to="/laporan" className={menuClass}>
+                                    {({ isActive }) => (
+                                        <>
+                                            <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                                <AiOutlineBarChart />
+                                            </span>
+                                            <div>
+                                                <p className="text-xs font-black tracking-tight">Laporan Omzet</p>
+                                                <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Analisis penjualan berkala</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </NavLink>
+                            </li>
+                        )}
+
+                        {/* 6. User (Akses: HANYA Owner) */}
+                        {userRole === "owner" && (
+                            <li>
+                                <NavLink to="/register" className={menuClass}>
+                                    {({ isActive }) => (
+                                        <>
+                                            <span className={`text-lg mt-0.5 ${isActive ? "text-stone-50" : "text-stone-400 group-hover:text-stone-700"}`}>
+                                                <AiOutlineBarChart />
+                                            </span>
+                                            <div>
+                                                <p className="text-xs font-black tracking-tight">User</p>
+                                                <p className={`text-[10px] mt-0.5 ${isActive ? "text-stone-300/80" : "text-stone-400"}`}>Hak Akses Owner</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </NavLink>
+                            </li>
+                        )}
                     </ul>
                 </nav>
             </div>
@@ -129,6 +169,9 @@ export default function Sidebar() {
                     <span className="font-black uppercase tracking-wider text-stone-600">Status Database</span>
                 </div>
                 Integritas data lokal terjaga terikat nomor antrean meja.
+                <div className="mt-2 text-[9px] font-black uppercase text-stone-500 tracking-wider">
+                    Role Aktif: {userRole}
+                </div>
             </div>
         </aside>
     );

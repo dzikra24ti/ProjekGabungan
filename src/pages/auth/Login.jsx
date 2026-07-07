@@ -25,7 +25,6 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validasi manual agar box merah muncul jika input kosong
     if (!dataForm.email || !dataForm.password) {
       setError("Email dan password wajib diisi");
       return;
@@ -34,24 +33,22 @@ export default function Login() {
     setLoading(true);
     setError("");
 
-    // Mengalihkan tembakan ke API lokal Laravel sendiri
     axios
       .post("http://127.0.0.1:8000/api/login", {
-        email: dataForm.email, // Menggunakan key 'email' sesuai validasi Laravel
+        email: dataForm.email,
         password: dataForm.password,
       })
       .then((response) => {
         if (response.status === 200) {
-          // MENYIMPAN NAMA USER SECARA DINAMIS KE LOCALSTORAGE
-          // Diambil dari response data user yang dikirim oleh DashboardController@login
-          localStorage.setItem("user_name", response.data.user.name);
+          // 🌟 PERBAIKAN DI SINI: Simpan nama & role murni dari response LoginController
+          localStorage.setItem("user_name", response.data.user_name);
+          localStorage.setItem("role", response.data.role); 
 
           // Mengarahkan ke dashboard utama setelah sukses
           navigate("/dashboard"); 
         }
       })
       .catch((err) => {
-        // Menampilkan pesan error khusus dari custom response backend Laravel
         setError(err.response?.data?.message || "Login Gagal. Cek kembali akun Anda.");
       })
       .finally(() => {
@@ -76,13 +73,9 @@ export default function Login() {
   ) : null;
 
   return (
-    /* Wrapper Utama: Menggunakan latar belakang abu-abu terang minimalis khas Patria */
     <div className="min-h-screen w-full bg-stone-100/50 flex items-center justify-center p-4 font-sans">
-      
-      {/* Container Putih Bertekstur Lembut */}
       <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-sm border border-stone-200/60">
         
-        {/* Identitas Logo Atas Menyesuaikan dengan Tema Warung Patria */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-stone-900 rounded-xl text-stone-100 text-sm font-black uppercase tracking-wider mb-3">
             🪵 Patria System
@@ -95,11 +88,9 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Info Status */}
         {loadingInfo}
         {errorInfo}
         
-        {/* Form Input dengan Aksen Warna Stone Global */}
         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
           <div>
             <label className="block text-[10px] font-black text-stone-400 mb-2 uppercase tracking-widest">
@@ -148,7 +139,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Tombol Utama Hitam Pekat Sesuai Tombol Navbar/Sidebar Patria */}
           <button
             disabled={loading}
             type="submit"
@@ -158,15 +148,7 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Teks Navigasi Bawah */}
-        <p className="mt-8 text-center text-xs text-stone-400 font-medium">
-          Belum terdaftar di sistem?{" "}
-          <Link to="/register" className="text-stone-900 font-black hover:underline">
-            Daftar Disini
-          </Link>
-        </p>
 
-        {/* Footer Hak Cipta */}
         <div className="mt-10 text-center text-[9px] text-stone-400 font-bold uppercase tracking-widest border-t border-stone-100 pt-4">
           © 2026 Patria System V1.0. All rights reserved.
         </div>

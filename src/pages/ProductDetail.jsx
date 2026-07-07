@@ -44,10 +44,9 @@ export default function ProductDetail() {
                 <h2 className="text-2xl font-black mb-2 text-stone-900 uppercase tracking-tight">{product.title}</h2>
                 <p className="text-stone-500 font-medium text-sm mb-1">Kategori: {product.category}</p>
                 <p className="text-stone-500 font-medium text-sm mb-1">Brand: {product.brand}</p>
-                <p className="text-stone-500 font-medium text-sm mb-3">Sisa Stok: {product.stock} porsi</p>
                 
                 <p className="text-stone-900 font-black text-xl mt-2 pt-3 border-t border-stone-100">
-                    Harga: Rp {(product.price * 1000).toLocaleString("id-ID")}
+                    Harga: Rp {(product.price ).toLocaleString("id-ID")}
                 </p>
             </div>
         </div>

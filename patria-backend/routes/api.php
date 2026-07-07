@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LoginController;
 
 // Jalur aman tanpa gangguan CSRF token mismatch
 Route::get('/products', [ProductController::class, 'index']);
@@ -18,4 +19,9 @@ Route::get('/dashboard/summary', [DashboardController::class, 'getDashboardSumma
 Route::post('/products', [ProductController::class, 'store']);         // Untuk Tambah
 Route::put('/products/{id}', [ProductController::class, 'update']);     // Untuk Simpan Edit
 Route::delete('/products/{id}', [ProductController::class, 'destroy']); // Untuk Hapus
+
+// Route untuk login
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/register', [LoginController::class, 'register']);
+
 

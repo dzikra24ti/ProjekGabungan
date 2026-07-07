@@ -50,7 +50,7 @@ export default function Kasir() {
     const totalBayar = daftarMenu.reduce((total, menu) => {
         const qty = keranjang[menu.id] || 0;
         // Karena harga di database bernilai satuan (misal 14), kalikan 1000 untuk konversi ke Rupiah asli
-        return total + (qty * (menu.price * 1000));
+        return total + (qty * (menu.price));
     }, 0);
 
     // 5. FUNGSI TOMBOL SIMPAN TRANSAKSI KE LARAVEL
@@ -144,7 +144,7 @@ export default function Kasir() {
                         <div className="divide-y divide-stone-100">
                             {daftarMenu.map((menu) => {
                                 const qty = keranjang[menu.id] || 0;
-                                const hargaRupiahAsli = menu.price * 1000;
+                                const hargaRupiahAsli = menu.price ;
                                 return (
                                     <div key={menu.id} className="py-4 flex items-center justify-between first:pt-0 last:pb-0">
                                         <div className="flex items-center gap-4">
@@ -220,7 +220,7 @@ export default function Kasir() {
                                     return (
                                         <div key={menu.id} className="flex justify-between text-stone-700">
                                             <span>{menu.title} (x{qty})</span>
-                                            <span>Rp {(qty * (menu.price * 1000)).toLocaleString("id-ID")}</span>
+                                            <span>Rp {(qty * (menu.price)).toLocaleString("id-ID")}</span>
                                         </div>
                                     );
                                 })}

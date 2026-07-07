@@ -68,7 +68,7 @@ export default function Laporan() {
                             <div className="space-y-1">
                                 <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Total Pendapatan</p>
                                 <h3 className="text-xl font-black text-stone-900 tracking-tight">
-                                    Rp {(reportData?.total_pendapatan || 0).toLocaleString("id-ID")}
+                                    Rp {Number(reportData?.total_pendapatan || 0).toLocaleString("id-ID")}
                                 </h3>
                                 <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
                                     <AiOutlineArrowUp /> +12.4%

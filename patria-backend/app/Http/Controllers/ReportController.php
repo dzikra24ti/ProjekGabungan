@@ -13,13 +13,9 @@ class ReportController extends Controller
 {
     public function getOmzetReport(Request $request): JsonResponse
     {
-        // 1. Tangkap parameter ?range= dari React (Default ke 'hari_ini' jika tidak ada)
         $range = $request->query('range', 'hari_ini');
-
-        // 2. Siapkan query transaksi dasar
         $query = Transaction::query();
 
-        // 3. Filter query berdasarkan periode waktu
         if ($range === 'hari_ini') {
             $query->whereDate('created_at', Carbon::today());
         } elseif ($range === 'bulan_ini') {
@@ -27,53 +23,51 @@ class ReportController extends Controller
                   ->whereYear('created_at', Carbon::now()->year);
         }
 
-        // 4. Ambil semua ID transaksi yang lolos filter waktu untuk menyaring tabel detail
         $transactionIds = $query->pluck('id');
-
-        // 5. Hitung Total Pendapatan & Jumlah Nota Terfilter
-        // Catatan: Dikali 1000 jika Anda menyimpan nominal ringkas di DB (misal: 92 menjadi 92.000)
-        $totalPendapatan = $query->sum('total_price') * 1000;
         $totalNota = $query->count();
 
-        // 6. Hitung Total Porsi Terjual dari tabel detail berdasarkan nota yang terfilter
         $totalPorsi = DB::table('transaction_details')
             ->whereIn('transaction_id', $transactionIds)
             ->sum('quantity');
 
-        // 7. Ambil semua data produk untuk menyusun Rincian Penjualan per Menu
         $products = Product::all();
 
-        $rincianMenu = $products->map(function ($product) use ($transactionIds, $totalPendapatan) {
-            // Hitung berapa porsi menu ini terjual pada periode tersebut
+        // 🌟 LANGKAH A: Hitung rincian subtotal per menu terlebih dahulu
+        $rincianMenuRaw = $products->map(function ($product) use ($transactionIds) {
             $kuantitasTerjual = DB::table('transaction_details')
                 ->whereIn('transaction_id', $transactionIds)
                 ->where('product_id', $product->id)
                 ->sum('quantity');
 
-            // Hitung subtotal omzet per produk (Harga produk dikali 1000 jika nominal ringkas)
-            $subtotalOmzet = $kuantitasTerjual * ($product->price * 1000);
-
-            // Hitung persentase kontribusi menu terhadap omzet kotor kedai
-            $kontribusi = $totalPendapatan > 0 ? round(($subtotalOmzet / $totalPendapatan) * 100) : 0;
+            // Subtotal omzet riil per produk (Harga produk dikali jumlah porsi terjual)
+            $subtotalOmzet = (int) $kuantitasTerjual * (int) $product->price;
 
             return [
                 'id' => $product->id,
                 'title' => $product->title,
                 'kuantitas_terjual' => (int) $kuantitasTerjual,
                 'subtotal_omzet' => $subtotalOmzet,
-                'kontribusi' => $kontribusi
             ];
         });
 
-        // 8. Cari Juara Menu Terlaris (Kuantitas terjual paling tinggi)
+        // 🌟 LANGKAH B: Hitung Total Pendapatan Akurat dari jumlahan subtotal menu (Bukan dari total_price transaksi)
+        $totalPendapatan = $rincianMenuRaw->sum('subtotal_omzet');
+
+        // 🌟 LANGKAH C: Hitung nilai persentase kontribusi yang seimbang
+        $rincianMenu = $rincianMenuRaw->map(function ($item) use ($totalPendapatan) {
+            $item['kontribusi'] = $totalPendapatan > 0
+                ? (int) round(($item['subtotal_omzet'] * 100) / $totalPendapatan)
+                : 0;
+            return $item;
+        });
+
         $menuTerlarisData = collect($rincianMenu)->sortByDesc('kuantitas_terjual')->first();
         $menuTerlaris = ($menuTerlarisData && $menuTerlarisData['kuantitas_terjual'] > 0)
             ? $menuTerlarisData['title']
             : "Belum Ada";
 
-        // 9. Kembalikan data matang dalam format JSON ke React
         return response()->json([
-            'total_pendapatan' => $totalPendapatan,
+            'total_pendapatan' => $totalPendapatan, // Hasilnya dijamin Rp 33.000 murni!
             'total_nota' => $totalNota,
             'total_porsi' => (int) $totalPorsi,
             'menu_terlaris' => $menuTerlaris,

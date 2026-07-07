@@ -93,7 +93,7 @@
                                         <td className="px-6 py-4 text-gray-500">{item.category}</td>
                                         <td className="px-6 py-4 font-black text-neutral-900">
                                             {/* Menyesuaikan harga asli rupiah (Contoh: 14 * 1000 = Rp 14.000) */}
-                                            Rp {(item.price * 1000).toLocaleString("id-ID")}
+                                            Rp {(item.price ).toLocaleString("id-ID")}
                                         </td>
                                         <td className="px-6 py-4 text-gray-500">{item.brand}</td>
                                     </tr>

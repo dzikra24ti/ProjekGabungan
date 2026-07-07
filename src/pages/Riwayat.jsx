@@ -106,7 +106,7 @@ export default function Riwayat() {
                                     </td>
                                     <td className="py-4 px-6 text-right font-black text-stone-900">
                                         {/* Karena harga di database bernilai satuan (misal 14), kalikan 1000 untuk sinkronisasi */}
-                                        Rp {(row.total_price * 1000).toLocaleString("id-ID")}
+                                        Rp {(row.total_price).toLocaleString("id-ID")}
                                     </td>
                                     <td className="py-4 px-6 text-center">
                                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200/40 uppercase tracking-wider">

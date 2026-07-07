@@ -18,7 +18,6 @@ public function up(): void
         $table->string('brand')->nullable();
         $table->integer('price'); // Harga disimpan dalam bentuk angka biasa
         $table->text('thumbnail')->nullable(); // Menyimpan URL gambar
-        $table->integer('stock')->default(0);
         $table->timestamps();
     });
 }
