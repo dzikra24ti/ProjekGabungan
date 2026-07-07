@@ -9,7 +9,7 @@
   const Products = React.lazy(() => import("./pages/Products"))
   const ProductDetail = React.lazy(() => import("./pages/ProductDetail"))
   const Laporan = React.lazy(() => import("./pages/Laporan"))
-  const NotFound = React.lazy(() => import("./pages/Notfound"))
+  const NotFound = React.lazy(() => import("./pages/NotFound"))
   import MainLayout from "./layouts/MainLayout";
   import AuthLayout from "./layouts/AuthLayout";
   const Login = React.lazy(() => import("./pages/auth/Login"))
