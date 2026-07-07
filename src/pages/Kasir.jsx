@@ -12,7 +12,7 @@ export default function Kasir() {
 
     // 2. AMBIL DATA MASTER MENU DARI LARAVEL
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/api/products")
+       axios.get(`${import.meta.env.VITE_API_URL}/products`)
             .then((response) => {
                 setDaftarMenu(response.data);
                 
@@ -85,7 +85,7 @@ export default function Kasir() {
         };
 
         // Kirim data transaksi ke backend Laravel
-        axios.post("http://127.0.0.1:8000/api/transactions", payload)
+       axios.post(`${import.meta.env.VITE_API_URL}/transactions`, payload)
             .then((response) => {
                 if (response.data.status === "success") {
                     alert(`Transaksi untuk ${nomorMeja} senilai Rp ${totalBayar.toLocaleString("id-ID")} BERHASIL disimpan ke database!`);
@@ -151,7 +151,7 @@ export default function Kasir() {
                                             <div className="w-14 h-14 bg-stone-50 border border-stone-200/60 rounded-2xl overflow-hidden flex items-center justify-center text-xl shadow-inner relative select-none shrink-0">
                                                 {/* Menggunakan path file gambar lokal dari folder public Laravel */}
                                                 <img 
-                                                    src={`http://127.0.0.1:8000/${menu.thumbnail}`} 
+                                                    src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${menu.thumbnail}`}
                                                     alt={menu.title}
                                                     className="w-full h-full object-cover absolute inset-0 mix-blend-multiply"
                                                     onError={(e) => { e.target.style.display = 'none'; }}

@@ -14,8 +14,7 @@
         useEffect(() => {
             const timeout = setTimeout(() => {
                 // Mengubah URL menembak ke API Laravel lokal Anda dengan parameter query 'q'
-                axios
-                    .get(`http://127.0.0.1:8000/api/products?q=${query}`)
+               axios.get(`${import.meta.env.VITE_API_URL}/products?q=${query}`)
                     .then((response) => {
                         if (response.status !== 200) {
                             setError(response.data.message || "Gagal mengambil data");

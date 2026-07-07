@@ -11,7 +11,7 @@ export default function Riwayat() {
 
     // 2. AMBIL DATA DARI BACKEND LARAVEL
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/api/transactions")
+        axios.get(`${import.meta.env.VITE_API_URL}/transactions`)
             .then((response) => {
                 // Sisi Laravel sudah otomatis mengurutkan dari yang terbaru (descending)
                 setListTransaksi(response.data);

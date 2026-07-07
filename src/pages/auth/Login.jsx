@@ -33,11 +33,7 @@ export default function Login() {
     setLoading(true);
     setError("");
 
-    axios
-      .post("http://127.0.0.1:8000/api/login", {
-        email: dataForm.email,
-        password: dataForm.password,
-      })
+axios.post(`${import.meta.env.VITE_API_URL}/register`, dataForm)
       .then((response) => {
         if (response.status === 200) {
           // 🌟 PERBAIKAN DI SINI: Simpan nama & role murni dari response LoginController

@@ -16,7 +16,7 @@ export default function Laporan() {
         setLoading(true);
         
         // Menembak endpoint API dengan membawa parameter range (hari_ini / bulan_ini)
-        axios.get(`http://127.0.0.1:8000/api/reports/omzet?range=${periode}`)
+        axios.get(`${import.meta.env.VITE_API_URL}/reports/omzet?range=${periode}`)
             .then((response) => {
                 setReportData(response.data);
                 setLoading(false);

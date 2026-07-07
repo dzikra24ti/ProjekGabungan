@@ -64,8 +64,7 @@ export default function Register() {
 
     setLoading(true);
 
-    axios
-      .post("http://127.0.0.1:8000/api/register", dataForm)
+axios.post(`${import.meta.env.VITE_API_URL}/register`, dataForm)
       .then((response) => {
         if (response.status === 201 || response.status === 200) {
           setSuccess("Akun karyawan berhasil didaftarkan ke sistem!");

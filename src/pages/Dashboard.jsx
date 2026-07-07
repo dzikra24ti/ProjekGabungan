@@ -15,7 +15,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         // Menembak API khusus rangkuman data operasional dashboard hari ini
-        axios.get("http://127.0.0.1:8000/api/dashboard/summary")
+   axios.get(`${import.meta.env.VITE_API_URL}/dashboard/summary`)
             .then((response) => {
                 setDashboardData(response.data);
                 setLoading(false);

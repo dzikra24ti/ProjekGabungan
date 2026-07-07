@@ -9,8 +9,7 @@ export default function ProductDetail() {
 
     useEffect(() => {
         // Mengubah URL dummyjson menjadi endpoint Laravel lokal lewat web.php
-        axios
-            .get(`http://127.0.0.1:8000/api/products/${id}`)
+  axios.get(`${import.meta.env.VITE_API_URL}/products/${id}`)
             .then((response) => {
                 if (response.status !== 200) {
                     setError(response.data?.message || "Gagal memuat data")
@@ -32,7 +31,7 @@ export default function ProductDetail() {
             <div className="w-64 h-64 flex items-center justify-center overflow-hidden rounded-xl mb-4 bg-stone-50 p-2 border border-stone-100">
                 <img
                     /* Menggabungkan base URL Laravel port 8000 dengan path gambar dari database */
-                    src={`http://127.0.0.1:8000/${product.thumbnail}`}
+                    src={`${import.meta.env.VITE_API_URL.replace('/api', '')}/${product.thumbnail}`}
                     alt={product.title}
                     /* mix-blend-multiply membantu menyatukan background gambar putih dengan box keabuan */
                     className="max-w-full max-h-full object-contain mix-blend-multiply"
