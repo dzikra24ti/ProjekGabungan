@@ -6,7 +6,7 @@ export default function Forgot() {
     <div className="w-full">
       {/* JUDUL TEMA JAGO AYAM */}
       <div className="text-center mb-8">
-        <h2 className="text-[#F59E0B] font-black text-3xl tracking-tighter italic">JAGO AYAM.</h2>
+        <h2 className="text-[#F59E0B] font-black text-3xl tracking-tighter italic">Bahtera</h2>
       </div>
 
       <div className="text-center mb-6">
